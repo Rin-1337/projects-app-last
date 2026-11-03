@@ -12,6 +12,7 @@
  */
 import type { ID, TokenTransaction } from "../types";
 import { generateId, nowISO, readStore, updateStore } from "../storage";
+import { logAction } from "./audit";
 
 // ไม่มี export: ไฟล์อื่นเรียกใช้ไม่ได้ เพราะไม่อยากให้ใครเปลี่ยนยอดโดยไม่บันทึกธุรกรรม
 // delta: จำนวนที่เปลี่ยน เช่น +500 คือเติม, -60 คือหัก
@@ -98,7 +99,7 @@ export function topupOnsite(input: {
   const { customerId, amount, channel, adminId } = input;
   assertValidAmount(amount);
   changeBalance(customerId, amount);
-  return addTransaction({
+  const tx = addTransaction({
     type: "topup",
     amount,
     fromUserId: null,
@@ -106,6 +107,13 @@ export function topupOnsite(input: {
     channel,
     performedBy: adminId,
   });
+  logAction({
+    actorId: adminId,
+    action: "wallet.topup",
+    targetId: customerId,
+    detail: `เติม ${amount} Token (${channel === "onsite_cash" ? "เงินสด" : "QR"})`,
+  });
+  return tx;
 }
 
 /** Customer จ่าย Token ให้ร้าน — ต้องเช็กยอดคงเหลือก่อน 
