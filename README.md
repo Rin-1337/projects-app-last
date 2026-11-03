@@ -1,36 +1,385 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Event Registration & Token Management Platform
 
-## Getting Started
+ระบบลงทะเบียนเข้าร่วมงาน จำหน่ายบัตร และจัดการธุรกรรมภายในงาน Event ที่รองรับการทำงานของผู้ใช้งาน 4 บทบาท ได้แก่ Customer, Organizer, Vendor และ Admin โดยมีระบบ Token Wallet สำหรับใช้ซื้อสินค้าและบริการภายในงาน รวมถึงระบบถอนเงินของร้านค้า Vendor
 
-First, run the development server:
+---
+
+## 1. Project Overview
+
+**Event Registration & Token Management Platform** เป็นเว็บไซต์สำหรับจัดการงาน Event แบบครบวงจร ตั้งแต่การลงทะเบียนเข้าร่วมงาน การจำหน่ายบัตร การจัดการผู้เข้าร่วมงาน การจำหน่ายเสื้อและของที่ระลึก ไปจนถึงระบบร้านค้าภายในงาน
+
+ระบบมีการแบ่งสิทธิ์การใช้งานตามบทบาทของผู้ใช้ (Role-Based Access) โดยผู้ใช้งานทุกประเภทสามารถเข้าสู่ระบบผ่านหน้า Login เดียวกัน และระบบจะนำผู้ใช้ไปยัง Dashboard ตาม Role ที่กำหนด
+
+นอกจากนี้ยังมีระบบ Token Wallet สำหรับลูกค้าใช้ชำระค่าสินค้าและบริการจากร้านค้าภายในงาน โดยร้านค้าสามารถสะสม Token จากยอดขายและยื่นคำขอถอนเป็นเงินบาทได้ในอัตรา 1 Token เท่ากับ 1 บาท
+
+**หมายเหตุ:** โปรเจกต์นี้เป็น Frontend Prototype ไม่มี Backend จริง โดยใช้ localStorage ในการจำลองและจัดเก็บข้อมูลภายใน Browser
+
+---
+
+## 2. Project Objectives
+
+1. เพื่อพัฒนาเว็บไซต์สำหรับลงทะเบียนและจำหน่ายบัตรเข้าร่วมงาน Event
+2. เพื่อให้ผู้จัดงานสามารถบริหารจัดการ Event และข้อมูลผู้เข้าร่วมงานได้
+3. เพื่อรองรับการจัดการร้านค้าและสินค้าที่จำหน่ายภายในงาน
+4. เพื่อพัฒนาระบบ Token Wallet สำหรับใช้ชำระค่าสินค้าและบริการ
+5. เพื่อรองรับการเติม Token ทั้งช่องทางออนไลน์และหน้างาน
+6. เพื่อให้ร้านค้าสามารถตรวจสอบยอดขายและยื่นคำขอถอนเงินได้
+7. เพื่อให้ผู้ดูแลระบบสามารถจัดการผู้ใช้ Event และธุรกรรมภายในแพลตฟอร์มได้
+
+---
+
+## 3. User Roles
+
+ระบบแบ่งผู้ใช้งานออกเป็น 4 Roles ดังนี้
+
+### 3.1 Customer (ผู้เข้าร่วมงาน)
+
+ผู้ใช้งานทั่วไปที่ต้องการเข้าร่วมงาน Event และซื้อสินค้า
+
+ความสามารถ:
+
+- สมัครสมาชิกและเข้าสู่ระบบ
+- ดูรายการ Event และรายละเอียดงาน
+- ลงทะเบียนและซื้อบัตรเข้าร่วมงาน
+- ดูประวัติการซื้อบัตร
+- แสดง QR Code สำหรับใช้ Check-in
+- เติม Token ผ่าน QR Code Payment
+- เติม Token หน้างานผ่าน Admin โดยใช้ Customer ID
+- ตรวจสอบยอดคงเหลือใน Token Wallet
+- สแกน QR Code ของร้านค้าเพื่อซื้อสินค้าและบริการด้วย Token
+- ดูประวัติการเติมและใช้ Token
+- ซื้อเสื้อและของที่ระลึกจาก Organizer
+- ตรวจสอบประวัติการสั่งซื้อและสถานะการจัดส่ง
+
+### 3.2 Organizer (ผู้จัดงาน)
+
+ผู้รับผิดชอบการจัดการ Event ที่ได้รับมอบหมาย
+
+ความสามารถ:
+
+- เข้าสู่ระบบด้วยบัญชีที่ Admin สร้างให้
+- ดูภาพรวมข้อมูล Event ผ่าน Dashboard
+- จัดการรายละเอียด Event
+- จัดการประเภทบัตร ราคา และจำนวนบัตร
+- ตรวจสอบรายชื่อผู้เข้าร่วมงาน
+- ตรวจสอบสถานะการชำระเงิน
+- จัดการระบบ Check-in
+- จัดการเสื้อและของที่ระลึกของ Organizer
+- จัดการสินค้าคงคลังของ Organizer
+- จัดการรายการสั่งซื้อออนไลน์
+- บันทึกการขายสินค้าที่บูทหน้างาน
+- รองรับการรับชำระเงินสดและ QR Code ที่บูท
+- ตรวจสอบข้อมูลร้านค้า Vendor ภายใน Event
+- ตรวจสอบและอนุมัติหรือปฏิเสธข้อมูลสินค้าของ Vendor
+- ดูภาพรวมยอดขาย Token ของ Vendor ภายใน Event
+- ดูรายงานและสรุปผลการจัดงาน
+
+### 3.3 Vendor (ร้านค้าภายในงาน)
+
+ร้านค้าภายนอกที่ได้รับอนุญาตให้เข้าร่วมจำหน่ายสินค้าและบริการภายใน Event
+
+ความสามารถ:
+
+- เข้าสู่ระบบด้วยบัญชีที่ Admin สร้างให้
+- ดู Dashboard และสรุปยอดขาย
+- จัดการข้อมูลร้านค้า
+- ส่งข้อมูลสินค้าให้ Organizer ตรวจสอบและอนุมัติ
+- แสดง QR Code สำหรับรับชำระเงิน
+- รับชำระเงินจาก Customer ด้วย Token
+- ตรวจสอบรายการธุรกรรม
+- ดูประวัติการขายสินค้า
+- ตรวจสอบยอด Token ที่ได้รับ
+- จัดการข้อมูลบัญชีธนาคาร
+- ส่งคำขอถอนเงินจาก Token เป็นเงินบาท
+- ตรวจสอบสถานะคำขอถอนเงิน
+- ดูประวัติการถอนเงิน
+
+### 3.4 Admin (ผู้ดูแลระบบ)
+
+ผู้ดูแลระบบส่วนกลางที่มีสิทธิ์จัดการข้อมูลทั้งหมดของแพลตฟอร์ม
+
+ความสามารถ:
+
+- เข้าสู่ระบบด้วยบัญชี Admin
+- จัดการบัญชีผู้ใช้งานและสิทธิ์การเข้าถึง
+- สร้างบัญชี Organizer และ Vendor
+- ตรวจสอบและอนุมัติร้านค้าที่ต้องการเข้าร่วมงาน
+- จัดการ Event ทั้งหมด
+- กำหนด Organizer ให้รับผิดชอบ Event
+- จัดการระบบ Token Wallet
+- ค้นหา Customer ด้วย Customer ID
+- เติม Token ให้ Customer
+- รองรับการเติม Token หน้างานด้วยเงินสดและ QR Code
+- ตรวจสอบธุรกรรมและประวัติการเติม Token
+- ตรวจสอบคำขอถอนเงินจาก Vendor
+- อนุมัติหรือปฏิเสธคำขอถอนเงิน
+- บันทึกผลการโอนเงินให้ Vendor
+- ดูรายงานภาพรวมของระบบ
+- ตรวจสอบประวัติการดำเนินงานของผู้ดูแลระบบ
+
+---
+
+## 4. System Workflow
+
+### 4.1 Authentication Workflow
+
+1. ผู้ใช้งานเข้าสู่หน้า Login
+2. กรอก Username หรือ Email และ Password
+3. ระบบตรวจสอบข้อมูลบัญชี
+4. ตรวจสอบ Role ของผู้ใช้งาน
+5. นำผู้ใช้งานไปยัง Dashboard ตามสิทธิ์
+
+การสมัครสมาชิก:
+
+- Customer สามารถสมัครสมาชิกได้ด้วยตนเอง
+- Organizer และ Vendor ต้องได้รับบัญชีจาก Admin
+- Admin ใช้บัญชีที่กำหนดไว้สำหรับผู้ดูแลระบบ
+
+### 4.2 Ticket Purchase Workflow
+
+1. Customer เลือก Event ที่ต้องการเข้าร่วม
+2. เลือกประเภทบัตรและจำนวนบัตร
+3. กรอกข้อมูลผู้เข้าร่วมงาน
+4. ระบบแสดงรายละเอียดและยอดชำระเงิน
+5. Customer ดำเนินการชำระเงินผ่าน QR Code
+6. ระบบจำลองผลการชำระเงิน
+7. เมื่อชำระสำเร็จ ระบบออก QR Code ประจำบัตร
+8. Customer สามารถนำ QR Code ไปใช้ Check-in ที่งาน
+
+### 4.3 Token Top-up Workflow
+
+**Online Top-up**
+
+1. Customer เลือกจำนวนเงินที่ต้องการเติม
+2. ระบบคำนวณจำนวน Token
+3. แสดง QR Code สำหรับชำระเงิน
+4. Customer ดำเนินการชำระเงิน
+5. ระบบจำลองการยืนยันการชำระเงิน
+6. เพิ่ม Token เข้า Wallet ของ Customer
+
+**On-site Top-up**
+
+1. Customer แจ้ง Customer ID ให้ Admin
+2. Admin ค้นหา Customer ID
+3. ระบบแสดงข้อมูลสมาชิกเพื่อยืนยันตัวตน
+4. Admin ระบุจำนวนเงินที่ต้องการเติม
+5. เลือกช่องทางชำระเงิน Cash หรือ QR Code
+6. Admin ยืนยันการรับชำระเงิน
+7. ระบบเพิ่ม Token เข้า Wallet ของ Customer
+
+**อัตราแลกเปลี่ยน: 1 บาท = 1 Token**
+
+### 4.4 Vendor Payment Workflow
+
+1. Customer สแกน QR Code ของร้านค้า
+2. ระบบแสดงข้อมูลร้านค้า
+3. Customer ระบุยอด Token ที่ต้องการชำระ
+4. Customer ตรวจสอบและยืนยันรายการ
+5. ระบบตรวจสอบยอด Token คงเหลือ
+6. ระบบจำลองการหัก Token จาก Customer
+7. เพิ่มยอด Token ให้ Vendor
+8. บันทึกธุรกรรมและแสดงผลการชำระเงิน
+
+### 4.5 Vendor Withdrawal Workflow
+
+1. Vendor ตรวจสอบยอด Token ที่ได้รับจากการขายสินค้า
+2. Vendor ระบุจำนวนเงินที่ต้องการถอน
+3. ระบบคำนวณจำนวน Token ที่ต้องใช้ในการถอน
+4. Vendor เลือกบัญชีธนาคารที่ลงทะเบียนไว้
+5. Vendor ส่งคำขอถอนเงิน
+6. Admin ตรวจสอบคำขอและยอด Token
+7. Admin อนุมัติหรือปฏิเสธคำขอ
+8. เมื่ออนุมัติและดำเนินการโอนเงินจริงแล้ว Admin บันทึกผลการโอน
+9. ระบบจำลองการปรับยอด Token และบันทึกประวัติการถอนเงิน
+
+**อัตราแลกเปลี่ยน: 1 Token = 1 บาท**
+
+### 4.6 Organizer Merchandise Workflow
+
+**Online Purchase**
+
+- Customer เลือกเสื้อหรือของที่ระลึก
+- เลือกขนาดและจำนวนสินค้า
+- ระบุที่อยู่จัดส่ง
+- ชำระเงินผ่าน QR Code
+- ระบบจำลองผลการชำระเงิน
+- Organizer ตรวจสอบและจัดส่งสินค้า
+
+**On-site Purchase**
+
+- Customer เลือกสินค้าที่บูท Organizer
+- ระบบตรวจสอบสินค้าและจำนวนคงเหลือ
+- รับชำระเงินสดหรือ QR Code
+- Organizer ยืนยันการรับชำระเงิน
+- บันทึกการขายและปรับจำนวนสินค้าในคลัง
+
+**หมายเหตุ:** สินค้าของ Organizer แยกจากสินค้าของ Vendor โดยใช้ระบบจัดการสินค้าและการชำระเงินคนละส่วน
+
+---
+
+## 5. Payment & Token Rules
+
+| รายการ               | ช่องทางออนไลน์        | ช่องทางหน้างาน              |
+| -------------------- | --------------------- | --------------------------- |
+| ซื้อบัตร Event       | QR Code               | ตามช่องทางที่กำหนด          |
+| ซื้อเสื้อ Organizer  | QR Code               | เงินสด / QR Code            |
+| เติม Token           | QR Code               | เงินสด / QR Code ผ่าน Admin |
+| ซื้อสินค้าจาก Vendor | ไม่ใช่ช่องทางที่กำหนด | Token เท่านั้น              |
+| ถอนเงิน Vendor       | คำขอผ่านระบบ          | Admin ดำเนินการโอนเงิน      |
+
+### Token Rules
+
+- 1 บาท เท่ากับ 1 Token
+- Customer มี Token Wallet ประจำบัญชี
+- Customer สามารถใช้ Token ซื้อสินค้าและบริการจาก Vendor
+- Vendor ได้รับ Token จากการขายสินค้า
+- Vendor ไม่สามารถเติม Token ให้ตนเองได้
+- Vendor สามารถยื่นคำขอถอนเงินเป็นเงินบาทได้
+- Admin เป็นผู้ตรวจสอบและดำเนินการอนุมัติการถอนเงิน
+- ระบบต้องบันทึกประวัติการเติม การใช้ และการถอน Token
+
+---
+
+## 6. Frontend Technologies
+
+โปรเจกต์นี้พัฒนาโดยใช้เทคโนโลยี Frontend ดังต่อไปนี้
+
+| Technology   | Description                           |
+| ------------ | ------------------------------------- |
+| Next.js      | Framework สำหรับพัฒนาเว็บไซต์         |
+| React        | Library สำหรับสร้าง User Interface    |
+| TypeScript   | ภาษาสำหรับพัฒนา JavaScript แบบมี Type |
+| Tailwind CSS | Framework สำหรับตกแต่งเว็บไซต์        |
+| HTML5        | โครงสร้างหน้าเว็บไซต์                 |
+| CSS3         | การจัดรูปแบบและตกแต่ง                 |
+| localStorage | จัดเก็บข้อมูลจำลองภายใน Browser       |
+| QR Code      | ใช้จำลอง QR สำหรับบัตรและการชำระเงิน  |
+| Lucide Icons | ใช้แสดงไอคอนภายในระบบ                 |
+
+---
+
+## 7. Project Scope & Limitations
+
+โปรเจกต์นี้เป็นการพัฒนาในรูปแบบ Frontend Only เพื่อแสดงการทำงานและจำลองกระบวนการของระบบ
+
+**สิ่งที่ระบบสามารถทำได้**
+
+- แสดงผลหน้าเว็บไซต์และ Dashboard ตาม Role
+- จำลองการสมัครสมาชิกและเข้าสู่ระบบ
+- จำลองการจัดการ Event และข้อมูลผู้ใช้งาน
+- จำลองการซื้อบัตรและแสดง QR Code
+- จำลองการเติมและใช้ Token
+- จำลองการขายสินค้าและจัดการสินค้าคงคลัง
+- จำลองการส่งคำขอถอนเงิน
+- จำลองการอนุมัติคำขอโดย Admin
+- บันทึกข้อมูลจำลองด้วย localStorage
+
+**ข้อจำกัดของระบบ**
+
+- ไม่มี Backend Server
+- ไม่มี Database Server
+- ไม่มีระบบยืนยันตัวตนที่ปลอดภัยสำหรับใช้งานจริง
+- ไม่มี Payment Gateway จริง
+- ไม่มีการตรวจสอบการชำระเงินจริงผ่าน QR Code
+- ไม่มีการโอนเงินจริงเข้าบัญชีธนาคาร
+- ข้อมูล localStorage อยู่ภายใน Browser และไม่ซิงก์ระหว่างอุปกรณ์
+- ข้อมูลสามารถถูกแก้ไขจาก Browser ได้ จึงไม่เหมาะกับธุรกรรมเงินจริง
+
+---
+
+## 8. Installation & Getting Started
+
+### Prerequisites
+
+ติดตั้งโปรแกรมต่อไปนี้ก่อนเริ่มใช้งาน
+
+- Node.js
+- npm
+- Visual Studio Code
+
+### Step 1: Clone Project
+
+```bash
+git clone <repository-url>
+```
+
+### Step 2: Open Project
+
+```bash
+cd <project-folder>
+```
+
+### Step 3: Install Dependencies
+
+```bash
+npm install
+```
+
+### Step 4: Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Step 5: Open Browser
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+เปิดเว็บไซต์ผ่าน URL
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```text
+http://localhost:3000
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 9. Development Mode
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+คำสั่งสำหรับพัฒนาและตรวจสอบโปรเจกต์
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run dev
+```
 
-## Deploy on Vercel
+เริ่มต้น Development Server
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Build โปรเจกต์สำหรับ Production
+
+```bash
+npm run start
+```
+
+เริ่มต้น Production Server หลังจาก Build สำเร็จ
+
+```bash
+npm run lint
+```
+
+ตรวจสอบปัญหาด้าน Code Quality ตามเครื่องมือที่ตั้งค่าไว้ในโปรเจกต์
+
+---
+
+## 10. Future Development
+
+หากต้องการพัฒนาระบบให้สามารถใช้งานจริง สามารถต่อยอดได้ดังนี้
+
+- พัฒนา Backend API ด้วย Node.js
+- เชื่อมต่อ Database เช่น PostgreSQL หรือ MySQL
+- พัฒนาระบบ Authentication และ Authorization
+- เชื่อมต่อ Payment Gateway สำหรับ QR Payment
+- พัฒนาระบบตรวจสอบการชำระเงิน
+- พัฒนาระบบโอนเงินและถอนเงินจริงให้ Vendor
+- พัฒนาระบบ QR Code Scanner สำหรับ Check-in
+- เพิ่มระบบ Audit Logs และ Transaction Security
+
+---
+
+## 11. Project Summary
+
+Event Registration & Token Management Platform เป็นระบบบริหารจัดการงาน Event ที่รวมการลงทะเบียน การจำหน่ายบัตร การจัดการผู้เข้าร่วมงาน ร้านค้าภายในงาน และระบบ Token Wallet ไว้ในแพลตฟอร์มเดียว
+
+ระบบรองรับผู้ใช้งาน 4 Roles ได้แก่ Customer, Organizer, Vendor และ Admin โดยแต่ละ Role มีหน้าที่และสิทธิ์การใช้งานที่แตกต่างกัน
+
+การพัฒนาในครั้งนี้มุ่งเน้นการสร้าง Frontend Prototype ด้วย Next.js, TypeScript และ Tailwind CSS เพื่อจำลองกระบวนการทำงานของระบบทั้งหมด และสามารถต่อยอดไปสู่ระบบ Full Stack ในอนาคตได้
