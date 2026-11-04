@@ -22,7 +22,6 @@ import type {
   TokenTransaction,
   User,
   Vendor,
-  VendorProduct,
   Wallet,
   Withdrawal,
 } from "./types";
@@ -43,9 +42,8 @@ export interface StorageSchema {
   // อรอนงค์
   merchProducts: MerchProduct[];
   merchOrders: MerchOrder[];
-  // สุรัมภา
+  // ร้านค้า (Admin สร้าง / นุ่นใช้งาน)
   vendors: Vendor[];
-  vendorProducts: VendorProduct[];
   bankAccounts: BankAccount[];
   withdrawals: Withdrawal[];
 }
@@ -68,7 +66,6 @@ const DEFAULTS: StorageSchema = {
   merchProducts: [],
   merchOrders: [],
   vendors: [],
-  vendorProducts: [],
   bankAccounts: [],
   withdrawals: [],
 };

@@ -8,7 +8,7 @@ const nav: NavItem[] = [
   { href: "/organizer/events", label: "Event" },
   { href: "/organizer/attendees", label: "ผู้เข้าร่วม" },
   { href: "/organizer/checkin", label: "Check-in" },
-  { href: "/organizer/vendors", label: "ร้านค้าในงาน" },
+  { href: "/organizer/vendors", label: "ยอดขายร้านค้า" },
   { href: "/organizer/merch", label: "เสื้อ/ของที่ระลึก" },
   { href: "/organizer/merch/products", label: "สินค้า" },
   { href: "/organizer/merch/orders", label: "คำสั่งซื้อ" },

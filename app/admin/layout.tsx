@@ -6,7 +6,7 @@ import { RoleShell, type NavItem } from "@/components/shared/RoleShell";
 const nav: NavItem[] = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/users", label: "ผู้ใช้" },
-  { href: "/admin/vendors", label: "อนุมัติร้านค้า" },
+  { href: "/admin/vendors", label: "ร้านค้า" },
   { href: "/admin/events", label: "Event" },
   { href: "/admin/topup", label: "เติม Token" },
   { href: "/admin/transactions", label: "ธุรกรรม" },
