@@ -145,9 +145,13 @@ export interface MerchOrder {
   createdAt: string;
 }
 
-/* ───────────── ร้านค้า Vendor (สุรัมภา) ───────────── */
-
-export type ApprovalStatus = "pending" | "approved" | "rejected";
+/* ───────────── ร้านค้า Vendor ─────────────
+ * กติกาจากเจ้าของบรีฟ (4 พ.ย.):
+ * - ร้าน 1 ร้าน ขายสินค้า 1 อย่าง ราคาเดียว
+ * - Admin หาร้านเอง สร้างร้าน และกำหนด/แก้ราคาได้ (ร้านแก้ราคาเองไม่ได้)
+ * - ตอนขาย ร้านปรับได้แค่จำนวน แล้วสแกน QR ของลูกค้าเพื่อหัก Token
+ * - Organizer ดูรายงานยอดขายของร้านเพื่อเคลียร์เงินหลังจบงาน
+ */
 
 export interface Vendor {
   id: ID;
@@ -155,29 +159,19 @@ export interface Vendor {
   userId: ID;
   eventId: ID;
   shopName: string;
-  description?: string;
+  /** สินค้าอย่างเดียวที่ร้านขาย เช่น "หมูปิ้ง" */
+  productName: string;
+  /** ราคาต่อชิ้นเป็น Token — Admin เป็นคนกำหนด */
+  priceToken: number;
   boothNo?: string;
-  /** Admin เป็นผู้อนุมัติร้าน */
-  approvalStatus: ApprovalStatus;
-  /** ข้อความที่ใช้สร้าง QR รับชำระ เช่น "VENDOR:vd_xxx" */
-  qrCode: string;
+  description?: string;
+  /** false = Admin ปิดร้านชั่วคราว ขายไม่ได้ */
+  active: boolean;
   createdAt: string;
 }
 
-export interface VendorProduct {
-  id: ID;
-  vendorId: ID;
-  eventId: ID;
-  name: string;
-  description?: string;
-  priceToken: number;
-  /** Organizer ของ Event เป็นผู้อนุมัติสินค้า */
-  status: ApprovalStatus;
-  rejectReason?: string;
-  reviewedBy?: ID;
-  reviewedAt?: string;
-  createdAt: string;
-}
+/** สถานะการอนุมัติ (ใช้กับคำขอถอนเงินในอนาคต / ทั่วไป) */
+export type ApprovalStatus = "pending" | "approved" | "rejected";
 
 export interface BankAccount {
   id: ID;
