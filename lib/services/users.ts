@@ -1,28 +1,73 @@
 /**
+ * ═══════════════════════════════════════════════════════════════════════
  * lib/services/users.ts — จัดการบัญชีผู้ใช้
- * เจ้าของ: นัฐวิ (Admin)
- * ข้อมูลที่ดูแล: users
+ * เจ้าของ: นัฐวิ (เซน) · Admin
+ * ═══════════════════════════════════════════════════════════════════════
  *
- * ทิวากร (auth) เรียก findUserByEmail / registerCustomer
+ * ไฟล์นี้ทำอะไร
+ *   ค้นหาผู้ใช้ · ลูกค้าสมัครสมาชิก · Admin สร้างบัญชี Organizer/Vendor · ระงับ/เปิดใช้บัญชี
+ *
+ * ข้อมูลที่ไฟล์นี้ดูแล
+ *   users  [{ id, role, name, email, password, customerCode?, status, ... }]
+ *
+ * ใครเรียกใช้ไฟล์นี้
+ *   lib/auth.tsx (ปอ)          → findUserByEmail() ตอน login, registerCustomer() ตอนสมัคร
+ *   หน้า /admin/users          → createStaffAccount(), setUserStatus()
+ *   หน้า /admin/topup          → findCustomerByCode()
+ *   vendors.ts                 → getUser() (เช็กว่าบัญชีเป็น Vendor), findCustomerByCode() (ร้านสแกน QR ลูกค้า)
+ *
+ * กติกาบัญชีตาม requirement
+ *   - Customer สมัครเองได้ → registerCustomer
+ *   - Organizer / Vendor ต้องให้ Admin สร้างให้ → createStaffAccount
+ *   - Admin ใช้บัญชีที่กำหนดไว้ (อยู่ใน seed.ts) สร้างจากหน้าเว็บไม่ได้
+ *
+ * หลักการออกแบบ (คำถามที่อาจารย์น่าจะถาม)
+ *   ถาม: ทำไมฟังก์ชันที่ผู้ใช้กรอกผิดได้ (สมัคร/สร้างบัญชี) คืน { ok, reason }
+ *        แต่ setUserStatus ใช้ throw
+ *   ตอบ: อีเมลซ้ำ / รหัสสั้น เป็นเรื่องปกติที่ผู้ใช้ทำผิดได้ หน้าเว็บต้องแสดงเหตุผล
+ *        ส่วน setUserStatus ถูกเรียกจากปุ่มในตารางผู้ใช้ที่มีอยู่จริง
+ *        ถ้าหาไม่เจอแปลว่าโค้ดผิด (บั๊ก) จึง throw
+ *
+ *   ถาม: เก็บรหัสผ่านเป็นข้อความธรรมดา ปลอดภัยไหม
+ *   ตอบ: ไม่ปลอดภัย แต่นี่เป็น Frontend Prototype ตาม README (ไม่มี backend)
+ *        ระบบจริงต้อง hash รหัสผ่าน (เช่น bcrypt) และตรวจที่ server
  */
+
 import type { ID, Role, User } from "../types";
 import { generateId, nowISO, readStore, updateStore } from "../storage";
 import { logAction } from "./audit";
 
-// ตัดช่องว่างหน้า-หลัง และทำเป้นตัวพิมพ์เล็ก เช่น " Somying@Test.com " → "somying@test.com"
-// ทำไมต้องมี: ผู้ใช้อาจพิมพ์ Somying@test.com ตอนสมัคร แต่พิมพ์ somying@test.com ตอนล็อกอิน ถ้าไม่ทำให้เหมือนกันก่อนเทียบ จะล็อกอินไม่ได้ ทั้งที่เป็นอีเมลเดียวกัน
-// .trim() ตัดช่องว่างหน้าและหลัง (เผลอเว้นวรรคตอนวางอีเมล)
-// .toLowerCase() แปลงเป็นตัวพิมพ์เล็กทั้งหมด
+/* ═══════════════════════ ฟังก์ชันช่วย (ใช้ภายในไฟล์นี้เท่านั้น) ═══════════════════════ */
+
+/**
+ * normalizeEmail — ทำอีเมลให้เป็นรูปแบบเดียวกันก่อนเก็บหรือเทียบ
+ *   " Somying@Test.com " → "somying@test.com"
+ *
+ * ทำไมต้องมี
+ *   ผู้ใช้อาจพิมพ์ Somying@test.com ตอนสมัคร แต่พิมพ์ somying@test.com ตอนล็อกอิน
+ *   หรือเผลอเว้นวรรคตอนวาง ถ้าไม่ทำให้เหมือนกันก่อน จะล็อกอินไม่ได้ ทั้งที่เป็นอีเมลเดียวกัน
+ *   .trim()        ตัดช่องว่างหน้าและหลัง
+ *   .toLowerCase() แปลงเป็นตัวพิมพ์เล็กทั้งหมด (อีเมลไม่สนตัวพิมพ์เล็ก-ใหญ่)
+ */
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-// หารหัสลูกค้าที่มากที่สุดแล้ว +1 เช่น มี C0001, C0003 → คืน C0004
-// for (const u of users): วนทีละคน อ่านง่ายกว่า .map/.filter เมื่อต้องจำค่าข้ามรอบ (ในที่นี้คือ max)
-// let max = 0: ใช้ let เพราะค่าจะเปลี่ยนระหว่างวน ส่วน const เปลี่ยนค่าไม่ได้
-// "C0003".slice(1): ตัดตัวแรกทิ้ง ได้ "0003" แล้ว Number(...) แปลงเป็นเลข 3
-// String(4).padStart(4, "0"): เติม 0 ข้างหน้าจนครบ 4 หลัก ได้ "0004"
-// ทำไมหาค่าสูงสุด ไม่ใช้นับจำนวนคน: ถ้าวันหลังมีการลบลูกค้า การนับจำนวนอาจได้รหัสซ้ำกับคนที่มีอยู่ ส่วนค่าสูงสุด +1 ไม่มีวันซ้ำ
+/**
+ * nextCustomerCode — ออก Customer ID ถัดไป เช่น มี C0001, C0003 → ได้ C0004
+ *
+ * ขั้นตอน
+ *   1. วนผู้ใช้ทีละคน (for...of อ่านง่ายเมื่อต้องจำค่าข้ามรอบ คือ max)
+ *   2. ถ้ามี customerCode → ตัดตัว C ออก ("C0003".slice(1) = "0003") → แปลงเป็นเลข 3
+ *   3. จำค่าที่มากที่สุดไว้
+ *   4. คืน "C" + (max + 1) เติม 0 ข้างหน้าให้ครบ 4 หลัก (padStart(4, "0") → "0004")
+ *
+ * ทำไมหาค่าสูงสุด +1 ไม่ใช้ "นับจำนวนลูกค้า +1"
+ *   ถ้าวันหลังมีการลบลูกค้า การนับจำนวนอาจได้รหัสซ้ำกับคนที่ยังอยู่
+ *   ค่าสูงสุด +1 ไม่มีวันซ้ำ
+ * ทำไมใช้ let ไม่ใช่ const: ค่า max เปลี่ยนระหว่างวน (const เปลี่ยนค่าไม่ได้)
+ * ทำไมรหัสขึ้นต้นด้วย C และมี 4 หลัก: สั้น อ่านออกเสียงบอก Admin หน้างานได้ง่าย
+ */
 function nextCustomerCode(users: User[]): string {
   let max = 0;
   for (const u of users) {
@@ -36,9 +81,17 @@ function nextCustomerCode(users: User[]): string {
   return "C" + String(max + 1).padStart(4, "0");
 }
 
-// ตรวจสอบข้อมูลบัญชีใหม่ - ผ่าน = null, ไม่ผ่าน = ข้อความบอกเหตุผล
-// string | null: ถ้าผ่านได้ null (ไม่มีปัญหา) ถ้าไม่ผ่านได้ข้อความบอกเหตุผล
-// if (...) return ...; บรรทัดเดียวไม่มีปีกกา: เขียนแบบนี้ได้ถ้าข้างในมีคำสั่งเดียว ช่วยให้รายการตรวจสั้นและอ่านง่าย
+/**
+ * validateAccount — ตรวจข้อมูลบัญชีใหม่
+ * คืน: null = ผ่าน, ข้อความ = ไม่ผ่าน (เหตุผล)
+ *
+ * ใช้ร่วมกันใน registerCustomer และ createStaffAccount (หลัก DRY)
+ * ตรวจทีละข้อ เจอข้อแรกที่ผิดก็คืนทันที → ผู้ใช้เห็นข้อความทีละข้อ อ่านง่าย
+ *
+ * ทำไมรหัสผ่านขั้นต่ำ 4 ตัว: บัญชีทดลองใช้ "1234" ถ้าตั้ง 8 ตัวจะขัดกับข้อมูลทดลอง
+ * ทำไมเช็กอีเมลแค่มี @: พอสำหรับ prototype ช่องกรอกหน้าเว็บใช้ type="email" ช่วยอีกชั้น
+ * if (...) return ...;  บรรทัดเดียวไม่มีปีกกา เขียนได้เมื่อมีคำสั่งเดียว ทำให้รายการตรวจสั้น
+ */
 function validateAccount(name: string, email: string, password: string): string | null {
   if (!name) return "กรุณากรอกชื่อ";
   if (!email.includes("@")) return "รูปแบบอีเมลไม่ถูกต้อง";
@@ -47,8 +100,13 @@ function validateAccount(name: string, email: string, password: string): string 
   return null;
 }
 
-// รายชื่อผู้ใช้ทั้งหมด หรือเฉพาะ role ที่ระบุ
-// โครงเดียวกับ listTransactions เลย: ไม่ส่ง role มาก็คืนทั้งหมด ส่ง "vendor" มาก็คืนเฉพาะร้าน
+/* ═══════════════════════ ค้นหาผู้ใช้ ═══════════════════════ */
+
+/**
+ * listUsers — รายชื่อผู้ใช้ทั้งหมด หรือเฉพาะ role ที่ระบุ
+ * ใครเรียก: หน้า /admin/users, หน้า /admin/vendors (เลือกบัญชี Vendor มาสร้างร้าน)
+ * role?  ไม่ส่ง = ทั้งหมด, ส่ง "vendor" = เฉพาะร้าน (โครงเดียวกับ listTransactions)
+ */
 export function listUsers(role?: Role): User[] {
   const users = readStore("users");
   if (!role) {
@@ -57,23 +115,33 @@ export function listUsers(role?: Role): User[] {
   return users.filter((u) => u.role === role);
 }
 
-// หาผู้ใช้จาก id (ไม่เจอ = undefined)
-// User | undefined: อาจได้ผู้ใช้ หรือไม่เจอก็ได้ คนเรียกต้องเช็กเองก่อนใช้
-// เขียนบรรทัดเดียว: readStore แล้วต่อ .find ได้ทันที ไม่ต้องเก็บใส่ตัวแปรก่อน
+/**
+ * getUser — หาผู้ใช้จาก id
+ * คืน: User | undefined → อาจไม่เจอ คนเรียกต้องเช็กก่อนใช้
+ * เขียนบรรทัดเดียวได้เพราะ readStore คืน array → ต่อ .find ได้ทันที
+ */
 export function getUser(userId: ID): User | undefined {
   return readStore("users").find((u) => u.id === userId);
 }
 
-// หาผู้ใช้จากอีเมล (ไม่สนตัวพิมพ์เล็ก-ใหญ่)
-// ทำให้ทั้งอีเมลที่พิมพ์มาและอีเมลที่เก็บไว้เป็นรูปแบบเดียวกันก่อนเทียบ
+/**
+ * findUserByEmail — หาผู้ใช้จากอีเมล (ไม่สนตัวพิมพ์เล็ก-ใหญ่ / ช่องว่าง)
+ * ใครเรียก: auth.tsx ตอน login, validateAccount (เช็กอีเมลซ้ำ)
+ * ทำให้ทั้ง "อีเมลที่พิมพ์มา" และ "อีเมลที่เก็บไว้" เป็นรูปแบบเดียวกันก่อนเทียบ
+ */
 export function findUserByEmail(email: string): User | undefined {
   const target = normalizeEmail(email);
   return readStore("users").find((u) => normalizeEmail(u.email) === target);
 }
 
-/** ค้นหาด้วย Customer ID เช่น "C0001" (หน้าเติม Token หน้างาน) */
-// .toUpperCase(): รหัสเก็บเป็นตัวใหญ่ (C0001) ถ้า Admin พิมพ์ c0001 ก็ยังหาเจอ
-// && คือ "และ": ต้องเป็น customer และรหัสตรงกัน กันไม่ให้ไปเจอบัญชี role อื่น
+/**
+ * findCustomerByCode — หาลูกค้าจาก Customer ID เช่น "C0001" หรือ " c0001"
+ * ใครเรียก: หน้า /admin/topup (Admin พิมพ์รหัสที่ลูกค้าบอก),
+ *           sellToCustomer ใน vendors.ts (ร้านสแกน QR ของลูกค้า ซึ่งก็คือ Customer ID)
+ *
+ * .toUpperCase()  รหัสเก็บเป็นตัวใหญ่ → พิมพ์ตัวเล็กก็ยังหาเจอ
+ * &&              "และ" — ต้องเป็น customer และรหัสตรง กันไปเจอบัญชี role อื่น
+ */
 export function findCustomerByCode(code: string): User | undefined {
   const target = code.trim().toUpperCase();
   return readStore("users").find(
@@ -81,15 +149,26 @@ export function findCustomerByCode(code: string): User | undefined {
   );
 }
 
-/** Customer สมัครเอง → ออก customerCode ให้อัตโนมัติ */
-// ทำไมคืน { ok, … } แทน throw: ใช้หลักเดียวกับ pay อีเมลซ้ำหรือกรอกไม่ครบเป็นเรื่องปกติที่ผู้ใช้ทำผิดได้ หน้าสมัครของปอต้องแสดง reason ให้ผู้ใช้เห็น
-// ⚠️ เปลี่ยน type ที่คืนค่า: ใน stub เดิมคืน User แต่ตอนนี้คืน { ok, user } แทน ตอนเปิด PR ต้องเขียนบอกปอด้วย
-// ตรวจทีละเงื่อนไข เจอข้อแรกที่ผิดก็คืนทันที: ผู้ใช้จะเห็นข้อความทีละข้อ และโค้ดอ่านง่าย ไม่ต้องซ้อน if หลายชั้น
-// if (findUserByEmail(email)): ถ้าเจอผู้ใช้ (ได้ object) จะเป็นจริง แปลว่าอีเมลซ้ำ เรียกใช้ฟังก์ชันที่เพิ่งเขียนในรอบ 1 ได้เลย
-// รหัสผ่านอย่างน้อย 4 ตัว: เพราะบัญชีทดลองใช้ 1234 ถ้าตั้งเป็น 8 ตัว จะสวนกับข้อมูลทดลอง
-// input.phone?.trim() || undefined: ถ้าไม่ได้ส่งเบอร์มา หรือส่งมาเป็นช่องว่าง ให้เป็น undefined แทนที่จะเก็บ "" ไว้
-// ไม่ต้องสร้างกระเป๋า Token: getBalance คืน 0 ถ้ายังไม่มีกระเป๋า และ changeBalance สร้างให้เองตอนเติมครั้งแรก ไฟล์ users.ts จึงไม่ต้องไปยุ่งกับข้อมูล wallets 
-// ซึ่งเป็นของ wallet.ts ถ้า stub เดิมมีคอมเมนต์ว่า "สร้าง wallet ยอด 0" ให้ลบส่วนนั้นออก
+/* ═══════════════════════ สร้างบัญชี ═══════════════════════ */
+
+/**
+ * registerCustomer — ลูกค้าสมัครสมาชิกเอง
+ *
+ * รับ:  { name, email, password, phone? }
+ * คืน:  { ok: true, user } | { ok: false, reason }
+ * ใครเรียก: หน้า /register ผ่าน auth.tsx (ปอ)
+ *
+ * ขั้นตอน: จัดรูปแบบชื่อ/อีเมล → ตรวจข้อมูล → สร้าง user พร้อม Customer ID → บันทึก
+ *
+ * จุดที่ควรรู้
+ *   phone: input.phone?.trim() || undefined
+ *     ถ้าไม่ส่งเบอร์ หรือส่งมาเป็นช่องว่าง → เก็บ undefined แทน "" (ไม่มีข้อมูล = ไม่มีช่อง)
+ *   status: "active"  สมัครแล้วใช้งานได้ทันที
+ *   ไม่สร้างกระเป๋า Token
+ *     getBalance คืน 0 ถ้ายังไม่มีกระเป๋า และ changeBalance สร้างให้ตอนเติมครั้งแรก
+ *     users.ts จึงไม่ต้องไปเขียนข้อมูล wallets ซึ่งเป็นของ wallet.ts (แยกหน้าที่ชัด)
+ *   ไม่บันทึก Audit Log เพราะผู้ทำคือลูกค้า ไม่ใช่ Admin
+ */
 export function registerCustomer(input: {
   name: string;
   email: string;
@@ -115,14 +194,28 @@ export function registerCustomer(input: {
     status: "active",
     createdAt: nowISO(),
   };
+  // [...users, user] = คัดลอกผู้ใช้เดิมทั้งหมด แล้วต่อท้ายด้วยคนใหม่
   updateStore("users", (users) => [...users, user]);
   return { ok: true, user };
 }
 
-/** Admin สร้างบัญชี Organizer / Vendor */
-// ต่างจาก registerCustomer แค่ 3 จุด: role มาจาก Admin เลือก · ไม่มี customerCode (ใช้เฉพาะลูกค้า) · บันทึก Audit Log
-// role: "organizer" | "vendor": Admin สร้างบัญชี Admin หรือ Customer จากฟังก์ชันนี้ไม่ได้ TypeScript จะขีดแดงทันทีถ้าส่ง role อื่นมา
-// เรียก logAction หลังบันทึกผู้ใช้สำเร็จแล้วเท่านั้น: ถ้าข้อมูลไม่ผ่าน จะ return ไปก่อน ไม่มี log ที่ไม่เกิดขึ้นจริง
+/**
+ * createStaffAccount — Admin สร้างบัญชี Organizer / Vendor
+ *
+ * รับ:  { role, name, email, password, adminId }
+ * คืน:  { ok: true, user } | { ok: false, reason }
+ * ใครเรียก: ฟอร์มในหน้า /admin/users
+ *
+ * ต่างจาก registerCustomer 3 จุด
+ *   1. role มาจาก Admin เลือก — type "organizer" | "vendor" กันสร้าง Admin/Customer จากทางนี้
+ *   2. ไม่มี customerCode (ใช้เฉพาะลูกค้า)
+ *   3. บันทึก Audit Log ว่า Admin คนไหนสร้างบัญชีใคร
+ *
+ * ทำไมเรียก logAction หลัง updateStore
+ *   บันทึก log เฉพาะเมื่อสร้างสำเร็จจริง ถ้าข้อมูลไม่ผ่านจะ return ไปก่อน ไม่มี log ปลอม
+ *
+ * หลังสร้างบัญชี Vendor แล้ว Admin ต้องไปสร้าง "ร้าน" ต่อที่ /admin/vendors (createVendor)
+ */
 export function createStaffAccount(input: {
   role: "organizer" | "vendor";
   name: string;
@@ -158,12 +251,27 @@ export function createStaffAccount(input: {
   return { ok: true, user};
 }
 
-// Admin ระงับหรือเปิดใช้บัญชี (บัญชีที่ถูกระงับจะล็อกอินไม่ได้)
-// User["status"]: ดึง type ของช่อง status มาจาก User โดยตรง ได้ "active" | "suspended" ถ้าวันหลังเพิ่มสถานะใหม่ใน types.ts ฟังก์ชันนี้จะรองรับเองโดยไม่ต้องแก้
-// ทำไมกรณีนี้ใช้ throw: ปุ่มระงับอยู่ในตารางรายชื่อผู้ใช้ที่มีอยู่จริง ถ้าหาไม่เจอแสดงว่าโค้ดผิด ไม่ใช่ผู้ใช้กรอกผิด
-// กันระงับ Admin: ถ้า Admin เผลอระงับตัวเอง จะไม่มีใครเข้าระบบมาแก้ได้อีก
-// .map(... ? updated : u): แทนที่เฉพาะผู้ใช้คนนั้น เป็นท่าเดียวกับ changeBalance
-// action: status === "suspended" ? ... : ...: เลือกชื่อ action ตามสถานะใหม่
+/* ═══════════════════════ แก้สถานะบัญชี ═══════════════════════ */
+
+/**
+ * setUserStatus — Admin ระงับหรือเปิดใช้บัญชี
+ *
+ * รับ:  userId, status ("active" | "suspended"), adminId
+ * คืน:  ผู้ใช้หลังแก้
+ * ใครเรียก: ปุ่ม "ระงับ / เปิดใช้งาน" ในตารางหน้า /admin/users
+ *
+ * User["status"]  ดึง type ของช่อง status จาก User โดยตรง
+ *                 ถ้าวันหลังเพิ่มสถานะใหม่ใน types.ts ฟังก์ชันนี้รองรับเองไม่ต้องแก้
+ *
+ * กันระงับ Admin: ถ้า Admin เผลอระงับตัวเอง จะไม่มีใครเข้าระบบมาแก้ได้อีก
+ *                 (หน้าเว็บซ่อนปุ่มไว้แล้ว แต่กันซ้ำที่นี่อีกชั้น เผื่อมีหน้าอื่นเรียก)
+ *
+ * { ...user, status }  คัดลอกทุกช่องของ user แล้วเปลี่ยนเฉพาะ status
+ * .map(... ? updated : u)  แทนที่เฉพาะคนนี้ ท่าเดียวกับ changeBalance
+ * action: เลือกชื่อตามสถานะใหม่ → อ่าน Audit Log แล้วรู้ทันทีว่าระงับหรือเปิด
+ *
+ * บัญชีที่ถูกระงับ: auth.tsx (ปอ) ต้องไม่ให้ล็อกอิน
+ */
 export function setUserStatus(
   userId: ID,
   status: User["status"],
