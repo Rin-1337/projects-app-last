@@ -37,10 +37,10 @@ export default function RegisterPage() {
       return;
     }
 
-    // 4. ล้างฟอร์มแล้วไปหน้าแรกของลูกค้า
+    // 4. ล้างฟอร์มแล้วกลับไปหน้าแรก
     //    ต้องล้างเอง เพราะ Next.js จำหน้าเก่าไว้ ถ้ากลับมารหัสผ่านจะยังค้างในช่อง
     event.currentTarget.reset();
-    router.replace("/customer");
+    router.replace("/");
   }
 
   return (
