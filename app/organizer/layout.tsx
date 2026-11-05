@@ -1,7 +1,7 @@
+import { RoleGuard } from "@/components/shared/RoleGuard";
 import { RoleShell, type NavItem } from "@/components/shared/RoleShell";
 
 // ผู้รับผิดชอบ: วิริญา (เมนู merch: อรอนงค์)
-// TODO: ครอบด้วย RoleGuard ให้เข้าได้เฉพาะ role = "organizer" (รอ lib/auth.tsx จากทิวากร)
 
 const nav: NavItem[] = [
   { href: "/organizer", label: "Dashboard" },
@@ -18,8 +18,10 @@ const nav: NavItem[] = [
 
 export default function OrganizerLayout({ children }: LayoutProps<"/organizer">) {
   return (
-    <RoleShell roleLabel="ผู้จัดงาน" nav={nav}>
-      {children}
-    </RoleShell>
+    <RoleGuard role="organizer">
+      <RoleShell roleLabel="ผู้จัดงาน" nav={nav}>
+        {children}
+      </RoleShell>
+    </RoleGuard>
   );
 }
