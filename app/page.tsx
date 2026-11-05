@@ -1,43 +1,72 @@
-import Link from "next/link";
-import { Card } from "@/components/ui";
+"use client";
+
+import { EventBanner } from "@/components/customer/EventBanner";
+import { EventCard } from "@/components/customer/EventCard";
+import { HomeHeader } from "@/components/customer/HomeHeader";
+import { useIsClient } from "@/components/customer/useIsClient";
+import type { EventItem } from "@/lib/types";
+import { useStore } from "@/lib/useStore";
 
 // หน้าแรก — ผู้รับผิดชอบ: ทิวากร
-// TODO: แบนเนอร์ Event + รายการบัตร + การ์ด เติม Token / QR Ticket / จ่ายร้านค้า (ตามสไลด์)
-//       ตอนนี้เป็นหน้าลิงก์ชั่วคราวสำหรับทดสอบแต่ละ Role
+// ทุกคนเข้าหน้านี้ได้ ไม่ต้องล็อกอิน และเห็นเนื้อหาเหมือนกัน ต่างกันแค่ปุ่มบนแถบด้านบน
 
-const sections = [
-  { href: "/customer", label: "Customer", owner: "ปอ" },
-  { href: "/organizer", label: "Organizer – Event & Ticket", owner: "เตย" },
-  { href: "/organizer/merch", label: "Organizer – Merchandise", owner: "ผักบุ้ง" },
-  { href: "/vendor", label: "Vendor", owner: "นุ่น" },
-  { href: "/admin", label: "Admin", owner: "เซน" },
-];
+/** เลือกเฉพาะงานที่เปิดขาย แล้วเรียงจากงานที่จะถึงก่อน */
+function getPublishedEvents(events: EventItem[]) {
+  const publishedEvents = events.filter((event) => event.status === "published");
+
+  return publishedEvents.sort((a, b) => {
+    return new Date(a.startAt).getTime() - new Date(b.startAt).getTime();
+  });
+}
+
+/** เนื้อหาหน้าแรก: แบนเนอร์งานถัดไป + รายการงานทั้งหมด */
+function HomeContent() {
+  // อ่านจาก useStore ตรง ๆ เพราะ listPublishedEvents ใน lib/services/events.ts ยังไม่ได้เขียน
+  const events = useStore("events");
+  const ticketTypes = useStore("ticketTypes");
+
+  const publishedEvents = getPublishedEvents(events);
+
+  if (publishedEvents.length === 0) {
+    return <p className="text-sm text-slate-600">ยังไม่มีงานที่เปิดจำหน่ายบัตร</p>;
+  }
+
+  return (
+    <>
+      <EventBanner event={publishedEvents[0]} />
+
+      <section>
+        <h2 className="text-xl font-bold text-slate-900">งานที่เปิดจำหน่ายบัตร</h2>
+
+        <div className="mt-3 grid gap-4 md:grid-cols-2">
+          {publishedEvents.map((event) => (
+            <EventCard
+              key={event.id}
+              event={event}
+              ticketTypes={ticketTypes.filter((ticketType) => ticketType.eventId === event.id)}
+            />
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
 
 export default function HomePage() {
+  const isClient = useIsClient();
+
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10">
-      <h1 className="text-3xl font-bold text-slate-900">Event Platform</h1>
-      <p className="mt-2 text-slate-600">
-        ระบบลงทะเบียนและขายบัตร — Prototype (ข้อมูลเก็บใน localStorage)
-      </p>
-      <div className="mt-6 flex gap-2">
-        <Link href="/login" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white">
-          เข้าสู่ระบบ
-        </Link>
-        <Link href="/register" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800">
-          สมัครสมาชิก
-        </Link>
-      </div>
-      <div className="mt-8 grid gap-3 sm:grid-cols-2">
-        {sections.map((s) => (
-          <Link key={s.href} href={s.href}>
-            <Card className="h-full transition-colors hover:border-blue-400">
-              <p className="font-semibold text-slate-900">{s.label}</p>
-              <p className="text-sm text-slate-500">ผู้รับผิดชอบ: {s.owner}</p>
-            </Card>
-          </Link>
-        ))}
-      </div>
-    </main>
+    <div className="min-h-full">
+      <HomeHeader />
+
+      <main className="mx-auto w-full max-w-6xl space-y-8 px-4 py-6">
+        {/* ข้อมูลอยู่ใน localStorage ระหว่างรอจึงแสดงกล่องโหลดไปก่อน */}
+        {isClient ? (
+          <HomeContent />
+        ) : (
+          <div className="h-72 animate-pulse rounded-2xl bg-slate-200" />
+        )}
+      </main>
+    </div>
   );
 }

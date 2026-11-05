@@ -22,7 +22,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  /** ลองเข้าสู่ระบบ ถ้าสำเร็จจะไปหน้าตาม Role และคืนค่า true */
+  /** ลองเข้าสู่ระบบ ถ้าสำเร็จจะไปหน้าตาม Role (ลูกค้าไปหน้าแรก) และคืนค่า true */
   function tryLogin(email: string, password: string) {
     setError("");
     setMessage("");

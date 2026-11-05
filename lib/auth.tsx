@@ -18,9 +18,9 @@ import { readStore, writeStore } from "./storage";
 import type { Role, Session, User } from "./types";
 import { useStore } from "./useStore";
 
-/** หน้าแรกของแต่ละ Role — login สำเร็จแล้วจะพาไปหน้านี้ */
+/** หน้าหลักของแต่ละ Role — login สำเร็จแล้วจะพาไปหน้านี้ (ลูกค้าใช้หน้าแรกเป็นหน้าหลัก) */
 export const ROLE_HOME: Record<Role, string> = {
-  customer: "/customer",
+  customer: "/",
   organizer: "/organizer",
   vendor: "/vendor",
   admin: "/admin",
