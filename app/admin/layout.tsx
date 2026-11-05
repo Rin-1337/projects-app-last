@@ -1,7 +1,7 @@
+import { RoleGuard } from "@/components/shared/RoleGuard";
 import { RoleShell, type NavItem } from "@/components/shared/RoleShell";
 
 // ผู้รับผิดชอบ: นัฐวิ
-// TODO: ครอบด้วย RoleGuard ให้เข้าได้เฉพาะ role = "admin" (รอ lib/auth.tsx จากทิวากร)
 
 const nav: NavItem[] = [
   { href: "/admin", label: "Dashboard" },
@@ -16,8 +16,10 @@ const nav: NavItem[] = [
 
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
-    <RoleShell roleLabel="ผู้ดูแลระบบ" nav={nav}>
-      {children}
-    </RoleShell>
+    <RoleGuard role="admin">
+      <RoleShell roleLabel="ผู้ดูแลระบบ" nav={nav}>
+        {children}
+      </RoleShell>
+    </RoleGuard>
   );
 }

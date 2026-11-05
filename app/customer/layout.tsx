@@ -1,7 +1,7 @@
+import { RoleGuard } from "@/components/shared/RoleGuard";
 import { RoleShell, type NavItem } from "@/components/shared/RoleShell";
 
 // ผู้รับผิดชอบ: ทิวากร
-// TODO: ครอบด้วย RoleGuard ให้เข้าได้เฉพาะ role = "customer" (รอ lib/auth.tsx จากทิวากร)
 
 const nav: NavItem[] = [
   { href: "/customer", label: "หน้าหลัก" },
@@ -16,8 +16,10 @@ const nav: NavItem[] = [
 
 export default function CustomerLayout({ children }: LayoutProps<"/customer">) {
   return (
-    <RoleShell roleLabel="ผู้เข้าร่วมงาน" nav={nav}>
-      {children}
-    </RoleShell>
+    <RoleGuard role="customer">
+      <RoleShell roleLabel="ผู้เข้าร่วมงาน" nav={nav}>
+        {children}
+      </RoleShell>
+    </RoleGuard>
   );
 }

@@ -1,12 +1,13 @@
 /**
  * โครงหน้าของแต่ละ Role: แถบบน + เมนู
  * ผู้ดูแล: นัฐวิ (PM)
- * TODO (ทิวากร): แสดงชื่อผู้ใช้ + ปุ่มออกจากระบบจาก useAuth() และเช็ก role (RoleGuard)
+ * การเช็ก role อยู่ใน RoleGuard ซึ่งครอบ RoleShell ใน layout.tsx ของแต่ละ Role
  */
 
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { NavLinks, RoleNav, type NavItem } from "./RoleNav";
+import { UserMenu } from "./UserMenu";
 
 export type { NavItem };
 
@@ -26,7 +27,10 @@ export function RoleShell({
           <Link href="/" className="font-semibold text-slate-900">
             Event Platform
           </Link>
-          <span className="text-sm text-slate-500">{roleLabel}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-slate-500">{roleLabel}</span>
+            <UserMenu />
+          </div>
         </div>
         {/* usePathname ต้องอยู่ใน Suspense เพราะโปรเจคเปิด cacheComponents */}
         <Suspense fallback={<NavLinks nav={nav} />}>
