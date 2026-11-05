@@ -15,6 +15,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/lib/auth";
 import { Badge, Button, Card, CardTitle, STATUS_TONE, Input } from "@/components/ui";
 import { setUserStatus, createStaffAccount } from "@/lib/services/users";
 import type { Role, User } from "@/lib/types";
@@ -24,10 +25,6 @@ import { useStore } from "@/lib/useStore";
  * ค่าพวกนี้ไม่เปลี่ยน จึงวางไว้นอก AdminUsersPage
  * React จะไม่ต้องสร้างใหม่ทุกครั้งที่หน้าวาดใหม่
  */
-
-// ชั่วคราว: ใช้ Admin ทดลองไปก่อน
-// TODO: เปลี่ยนเป็น id ของคนที่ล็อกอินอยู่ เมื่อปอทำ useAuth() ใน lib/auth.tsx เสร็จ
-const ADMIN_ID = "u_admin";
 
 // แปลงชื่อ Role เป็นภาษาไทยสำหรับแสดงผล เช่น ROLE_LABEL["vendor"] → "ร้านค้า"
 // Record<Role, string> บังคับให้มี key ครบทุก Role
@@ -50,6 +47,11 @@ const FILTERS: { value: Role | "all"; label: string }[] = [
 ];
 
 export default function AdminUsersPage() {
+  // id ของ Admin ที่ล็อกอินอยู่ — ส่งให้ service บันทึกใน Audit Log ว่าใครทำ
+  // RoleGuard ใน app/admin/layout.tsx ให้เข้าหน้านี้ได้เฉพาะ Admin จึงมี user เสมอ
+  const { user } = useAuth();
+  const adminId = user?.id ?? "";
+
   /* ───────────── ข้อมูลผู้ใช้ ─────────────
    * useStore("users") อ่านผู้ใช้ทั้งหมดจาก localStorage และอัปเดตเอง
    * ทุกครั้งที่ข้อมูลเปลี่ยน → สร้างบัญชีหรือระงับแล้ว ตารางเปลี่ยนทันที
@@ -97,7 +99,7 @@ export default function AdminUsersPage() {
     // setUserStatus จะ throw ถ้าหาผู้ใช้ไม่เจอ หรือพยายามระงับ Admin
     // จึงครอบด้วย try/catch แล้วแสดงข้อความแทนที่หน้าเว็บจะพัง
     try {
-      setUserStatus(user.id, next, ADMIN_ID);
+      setUserStatus(user.id, next, adminId);
       setError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "เปลี่ยนสถานะไม่สำเร็จ");
@@ -113,7 +115,7 @@ export default function AdminUsersPage() {
    * จึงใช้ if (!result.ok) แทน try/catch
    */
   function handleCreate() {
-    const result = createStaffAccount({ role, name, email, password, adminId: ADMIN_ID });
+    const result = createStaffAccount({ role, name, email, password, adminId });
 
     // ไม่ผ่าน → แสดงเหตุผลจาก service (เช่น "อีเมลนี้มีผู้ใช้แล้ว") แล้วจบ
     // ช่องที่กรอกไว้ไม่ล้าง ผู้ใช้จะได้แก้แค่ช่องที่ผิด

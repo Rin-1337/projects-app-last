@@ -37,7 +37,7 @@ import { pay } from "./wallet";
 /**
  * getVendor — หาร้านจาก id
  * คืน: Vendor | undefined
- * ใครเรียก: updateVendor ในไฟล์นี้, sellToCustomer ของนุ่น (หาราคาของร้าน)
+ * ใครเรียก: updateVendor ในไฟล์นี้, sellToCustomer ฝั่ง Vendor (หาราคาของร้าน)
  * ท่าเดียวกับ getUser ใน users.ts ต่างแค่ชื่อข้อมูล
  */
 export function getVendor(vendorId: ID): Vendor | undefined {
@@ -95,7 +95,7 @@ function checkShopFields(
  *        !user || user.role !== "vendor"  → ไม่เจอบัญชี หรือ เจอแต่ไม่ใช่ Vendor
  *        เขียน !user ไว้ก่อนเสมอ ถ้าสลับ ตอน user เป็น undefined จะ error ทันที
  *   2. บัญชีนี้ยังไม่มีร้าน (1 บัญชี = 1 ร้าน)
- *        เพราะฝั่งนุ่นใช้ getVendorByUser หา "ร้านของคนที่ล็อกอิน" ต้องได้ร้านเดียว
+ *        เพราะฝั่ง Vendor ใช้ getVendorByUser หา "ร้านของคนที่ล็อกอิน" ต้องได้ร้านเดียว
  *   3. Event มีอยู่จริง
  *        อ่าน readStore("events") ตรง ๆ ได้ เพราะเป็นการ "อ่านอย่างเดียว"
  *        กติกาทีมห้ามแค่ "เขียน" ข้อมูลของคนอื่น (events เป็นของเตย)
@@ -252,7 +252,7 @@ export function updateVendor(
   return updated;
 }
 
-/* ═══════════════════════ ฝั่ง Vendor (เซนทำแทน นุ่น) ═══════════════════════ */
+/* ═══════════════════════ ฝั่ง Vendor (เซน ทำแทนนุ่น) ═══════════════════════ */
 
 /**
  * getVendorByUser — หาร้านของบัญชี Vendor ที่ล็อกอินอยู่

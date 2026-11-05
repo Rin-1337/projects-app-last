@@ -25,17 +25,19 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/lib/auth";
 import { Badge, Button, Card, CardTitle, Input, Modal } from "@/components/ui";
 import { createVendor, updateVendor } from "@/lib/services/vendors";
 // import type → ใช้แค่เป็นชนิดข้อมูล ไม่มีโค้ดจริงติดไปตอนรัน
 import type { Vendor } from "@/lib/types";
 import { useStore } from "@/lib/useStore";
 
-// ชั่วคราว: ใช้ Admin ทดลองไปก่อน (ส่งให้ service บันทึกใน Audit Log ว่าใครทำ)
-// TODO: เปลี่ยนเป็น id ของคนที่ล็อกอินอยู่ เมื่อปอทำ useAuth() ใน lib/auth.tsx เสร็จ
-const ADMIN_ID = "u_admin";
-
 export default function AdminVendorsPage() {
+  // id ของ Admin ที่ล็อกอินอยู่ — ส่งให้ service บันทึกใน Audit Log ว่าใครทำ
+  // RoleGuard ใน app/admin/layout.tsx ให้เข้าหน้านี้ได้เฉพาะ Admin จึงมี user เสมอ
+  const { user } = useAuth();
+  const adminId = user?.id ?? "";
+
   /* ───────────── ข้อมูลจาก localStorage ─────────────
    * useStore อ่านข้อมูลและอัปเดตเองทุกครั้งที่ข้อมูลเปลี่ยน
    *   vendors → แสดงในตาราง
@@ -113,7 +115,7 @@ export default function AdminVendorsPage() {
    */
   function toggleActive(vendor: Vendor) {
     try {
-      updateVendor(vendor.id, { active: !vendor.active }, ADMIN_ID);
+      updateVendor(vendor.id, { active: !vendor.active }, adminId);
       setError("");
     } catch (err) {
       // err อาจเป็นอะไรก็ได้ ต้องเช็กว่าเป็น Error จริงก่อนใช้ .message
@@ -137,7 +139,7 @@ export default function AdminVendorsPage() {
       productName,
       priceToken: Number(price),
       boothNo,
-      adminId: ADMIN_ID,
+      adminId,
     });
 
     // ไม่ผ่าน → แสดงเหตุผลจาก service แล้วจบ (ไม่ล้างช่อง ผู้ใช้จะได้แก้แค่ช่องที่ผิด)
@@ -184,7 +186,7 @@ export default function AdminVendorsPage() {
   function handleSavePrice() {
     if (!editing) return;
     try {
-      updateVendor(editing.id, { priceToken: Number(newPrice) }, ADMIN_ID);
+      updateVendor(editing.id, { priceToken: Number(newPrice) }, adminId);
       setEditing(null);
     } catch (err) {
       setEditError(err instanceof Error ? err.message : "แก้ราคาไม่สำเร็จ");

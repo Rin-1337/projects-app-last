@@ -1,6 +1,6 @@
 /**
  * lib/services/withdrawals.ts — คำขอถอนเงินของ Vendor
- * เจ้าของ: สุรัมภา (ฝั่งสร้างคำขอ) + นัฐวิ (ฝั่งอนุมัติ)
+ * เจ้าของ: นัฐวิ ทั้งฝั่งสร้างคำขอ (รับจากสุรัมภา) และฝั่งอนุมัติ
  * ข้อมูลที่ดูแล: withdrawals
  *
  * Flow: pending → approved → transferred   หรือ   pending → rejected
@@ -9,7 +9,7 @@
 import type { ID, Withdrawal } from "../types";
 import { notImplemented } from "./_todo";
 
-/* ── ฝั่ง Vendor (สุรัมภา) ── */
+/* ── ฝั่ง Vendor (นัฐวิ รับจากสุรัมภา) ── */
 
 /** ต้องเช็กว่ายอด Token ของร้านพอ และไม่มีคำขอ pending ค้างเกินยอด */
 export function requestWithdrawal(input: {
