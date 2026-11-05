@@ -112,13 +112,49 @@ function buildSeed(): Omit<StorageSchema, "session"> {
     ],
 
     ticketTypes: [
-      { id: "tt_normal", eventId: "ev_reunion", name: "ปกติ", price: 350, quota: 100, sold: 0 },
+      { id: "tt_normal", eventId: "ev_reunion", name: "ปกติ", price: 350, quota: 100, sold: 2 },
       { id: "tt_vip", eventId: "ev_reunion", name: "VIP", price: 800, quota: 20, sold: 0 },
       { id: "tt_general", eventId: "ev_nightmarket", name: "ทั่วไป", price: 150, quota: 500, sold: 0 },
     ],
 
-    ticketOrders: [],
-    tickets: [],
+    ticketOrders: [
+      {
+        id: "to_demo",
+        customerId: "u_customer",
+        eventId: "ev_reunion",
+        ticketTypeId: "tt_normal",
+        quantity: 2,
+        unitPrice: 350,
+        total: 700,
+        attendeeNames: ["สมหญิง ตัวอย่าง", "สมชาย ตัวอย่าง"],
+        paymentMethod: "qr",
+        paymentStatus: "paid",
+        createdAt: T,
+        paidAt: T,
+      },
+    ],
+    tickets: [
+      {
+        id: "tk_demo1",
+        orderId: "to_demo",
+        eventId: "ev_reunion",
+        ticketTypeId: "tt_normal",
+        customerId: "u_customer",
+        attendeeName: "สมหญิง ตัวอย่าง",
+        qrCode: "TICKET:tk_demo1",
+        checkedIn: false,
+      },
+      {
+        id: "tk_demo2",
+        orderId: "to_demo",
+        eventId: "ev_reunion",
+        ticketTypeId: "tt_normal",
+        customerId: "u_customer",
+        attendeeName: "สมชาย ตัวอย่าง",
+        qrCode: "TICKET:tk_demo2",
+        checkedIn: false,
+      },
+    ],
 
     merchProducts: [
       {
