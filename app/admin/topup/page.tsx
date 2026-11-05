@@ -18,6 +18,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/lib/auth";
 import { Button, Card, CardTitle, Input } from "@/components/ui";
 import { findCustomerByCode } from "@/lib/services/users";
 import type { User } from "@/lib/types";
@@ -57,9 +58,10 @@ export default function AdminTopupPage() {
   // จะได้แสดงใต้ฟอร์มที่เกี่ยวข้อง ไม่ปนกัน
   const [topupError, setTopupError] = useState("");
 
-  // ชั่วคราว: ใช้ Admin ทดลองไปก่อน
-  // TODO: เปลี่ยนเป็น id ของคนที่ล็อกอินอยู่ เมื่อปอทำ useAuth() เสร็จ
-  const ADMIN_ID = "u_admin";
+  // id ของ Admin ที่ล็อกอินอยู่ — ส่งให้ service บันทึกใน Audit Log ว่าใครทำ
+  // RoleGuard ใน app/admin/layout.tsx ให้เข้าหน้านี้ได้เฉพาะ Admin จึงมี user เสมอ
+  const { user } = useAuth();
+  const adminId = user?.id ?? "";
 
   /* ───────────── ยอดคงเหลือของลูกค้า ─────────────
    * ใช้ useStore("wallets") แทน getBalance() เพราะ useStore อัปเดตเอง
@@ -116,7 +118,7 @@ export default function AdminTopupPage() {
         customerId: customer.id,
         amount: value,
         channel,
-        adminId: ADMIN_ID,
+        adminId,
       });
 
       // ถึงบรรทัดนี้ได้แปลว่าเติมสำเร็จ

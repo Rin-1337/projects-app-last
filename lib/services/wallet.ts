@@ -18,8 +18,8 @@
  * ใครเรียกใช้ไฟล์นี้
  *   หน้า /admin/topup              → topupOnsite()
  *   หน้า /customer/wallet  (ปอ)    → getBalance(), topupOnline(), listTransactions()
- *   vendors.ts sellToCustomer (นุ่น) → pay()
- *   withdrawals.ts (เซน/นุ่น)       → recordWithdrawal()
+ *   vendors.ts sellToCustomer      → pay()
+ *   withdrawals.ts                 → recordWithdrawal()
  *
  * หลักการออกแบบ (คำถามที่อาจารย์น่าจะถาม)
  *   ถาม: ทำไมแยกเป็นไฟล์ service ไม่เขียนในหน้าเว็บเลย
@@ -243,7 +243,7 @@ export function topupOnsite(input: {
  *
  * รับ:  { customerId, vendorId, vendorUserId, amount, note? }
  * คืน:  สำเร็จ { ok: true, tx }  หรือ  ไม่สำเร็จ { ok: false, reason }
- * ใครเรียก: sellToCustomer() ใน vendors.ts (นุ่น) — ร้านใส่จำนวน สแกน QR ลูกค้า แล้วกดยืนยัน
+ * ใครเรียก: sellToCustomer() ใน vendors.ts — ร้านใส่จำนวน สแกน QR ลูกค้า แล้วกดยืนยัน
  *
  * ทำไมมีทั้ง vendorId และ vendorUserId
  *   vendorId     = id ของ "ร้าน" (vd_coffee) เก็บในธุรกรรมให้รายงานรู้ว่าขายที่ร้านไหน

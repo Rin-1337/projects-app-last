@@ -42,7 +42,7 @@ export interface StorageSchema {
   // อรอนงค์
   merchProducts: MerchProduct[];
   merchOrders: MerchOrder[];
-  // ร้านค้า (Admin สร้าง / นุ่นใช้งาน)
+  // ร้านค้า (Admin สร้าง / Vendor ใช้งาน)
   vendors: Vendor[];
   bankAccounts: BankAccount[];
   withdrawals: Withdrawal[];
