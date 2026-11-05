@@ -13,7 +13,7 @@
  *
  * ไฟล์นี้แบ่ง 3 ส่วนตามเจ้าของ แก้เฉพาะส่วนของตัวเอง
  *   ใช้ร่วมกัน + ฝั่ง Admin  → เซน
- *   ฝั่ง Vendor             → นุ่น
+ *   ฝั่ง Vendor             → เซน ทำแทนนุ่น
  *   ฝั่ง Organizer          → เตย
  *   (แก้คนละส่วนของไฟล์ Git รวมให้เองได้ ไม่ชนกัน)
  *
@@ -23,13 +23,14 @@
  *      ยอดเงิน = ราคาที่ Admin ตั้ง × จำนวน คำนวณโดยระบบ
  */
 import type { BankAccount, ID, TokenTransaction, Vendor } from "../types";
-// notImplemented ยังต้องใช้ในส่วนของนุ่นและเตยที่ยังไม่ได้เขียน — ห้ามลบ
+// notImplemented ยังต้องใช้ในส่วนของเตยที่ยังไม่ได้เขียน — ห้ามลบ
 import { notImplemented } from "./_todo";
 import { generateId, nowISO, readStore, updateStore } from "../storage";
 // บันทึกการทำงานของ Admin (สร้างร้าน / แก้ราคา)
 import { logAction } from "./audit";
 // ใช้เช็กว่าบัญชีที่ Admin เลือกเป็น Vendor จริง
-import { getUser } from "./users";
+import { getUser, findCustomerByCode } from "./users";
+import { pay } from "./wallet";
 
 /* ═══════════════════════ ใช้ร่วมกัน (เซน) ═══════════════════════ */
 
@@ -251,19 +252,27 @@ export function updateVendor(
   return updated;
 }
 
-/* ═══════════════════════ ฝั่ง Vendor (นุ่น) ═══════════════════════ */
+/* ═══════════════════════ ฝั่ง Vendor (เซนทำแทน นุ่น) ═══════════════════════ */
 
-/** ร้านของบัญชีที่ล็อกอินอยู่ */
+/**
+ * getVendorByUser — หาร้านของบัญชี Vendor ที่ล็อกอินอยู่
+ * คืน: Vendor | undefined (undefined = บัญชีนี้ยังไม่มีร้าน)
+ * ใครเรียก: ทุกหน้าใน /vendor (หาว่าตัวเองคือร้านไหน)
+ * ท่าเดียวกับ getVendor ต่างแค่เทียบ userId แทน id
+ */
 export function getVendorByUser(userId: ID): Vendor | undefined {
-  void userId;
-  return notImplemented("getVendorByUser");
+  return readStore("vendors").find((v) => v.userId === userId);
 }
 
 /**
- * ร้านขายให้ลูกค้า: ราคา = vendor.priceToken × quantity
- * 1. หาลูกค้าจาก customerCode (QR ของลูกค้า) ด้วย findCustomerByCode() ใน users.ts
- * 2. เรียก pay() ใน wallet.ts — ยอดไม่พอจะไม่หักอะไร
- * 3. ใส่ note เช่น "หมูปิ้ง ×10" ให้ลูกค้าเห็นในประวัติ
+ * sellToCustomer — ร้านขายให้ลูกค้า แล้วหัก Token
+ *
+ * รับ:  { vendorId, customerCode (จาก QR ลูกค้า เช่น "C0001"), quantity }
+ * คืน:  { ok: true, tx, customerName, total } หรือ { ok: false, reason }
+ * ใครเรียก: หน้า /vendor/receive ตอนกด "ยืนยัน"
+ *
+ * ลำดับ: ตรวจทุกด่านก่อน → ค่อยเรียก pay() ซึ่งเป็นคนย้าย Token จริง
+ * ยอดเงิน = ราคาที่ Admin ตั้ง × จำนวน — ร้านพิมพ์ยอดเงินเองไม่ได้
  */
 export function sellToCustomer(input: {
   vendorId: ID;
@@ -272,18 +281,97 @@ export function sellToCustomer(input: {
 }):
   | { ok: true; tx: TokenTransaction; customerName: string; total: number }
   | { ok: false; reason: string } {
-  void input;
-  return notImplemented("sellToCustomer");
+  const { vendorId, customerCode, quantity } = input;
+
+  // 1: ร้านต้องมีอยู่จริง และ Admin ไม่ได้ปิดร้าน
+  const vendor = getVendor(vendorId);
+  if (!vendor) {
+    return { ok: false, reason: "ไม่พบร้านค้า" };
+  }
+  if (!vendor.active) {
+    return { ok: false, reason: "ร้านถูกปิดชั่วคราว ขายไม่ได้" };
+  }
+
+  // 2: จำนวนต้องเป็นจำนวนเต็ม 1 ขึ้นไป
+  if (!Number.isInteger(quantity) || quantity < 1) {
+    return { ok: false, reason: "จำนวนต้องเป็นจำนวนเต็ม 1 ขึ้นไป" };
+  }
+
+  // 3: หาลูกค้าจากรหัสใน QR และบัญชีต้องไม่ถูกระงับ
+  const customer = findCustomerByCode(customerCode);
+  if (!customer) {
+    return { ok: false, reason: `ไม่พบลูกค้ารหัส ${customerCode}` };
+  }
+  if (customer.status !== "active") {
+    return { ok: false, reason: "บัญชีลูกค้าถูกระงับ"};
+  }
+
+  // ผ่านทุกด่าน -> ให้ pay() หัก Token (Token ไม่พอ pay จะคืน ok: false ให้เอง)
+  const total = vendor.priceToken * quantity;
+  const result = pay({
+    customerId: customer.id,
+    vendorId: vendor.id,
+    vendorUserId: vendor.userId,
+    amount: total,
+    note: `${vendor.productName} ×${quantity}`,
+  });
+  if (!result.ok) {
+    return result;
+  }
+  return { ok: true, tx: result.tx, customerName: customer.name, total };
 }
 
+/**
+ * listBankAccounts — บัญชีธนาคารของร้าน (บัญชีหลักอยู่บนสุด)
+ * ใครเรียก: หน้า /vendor/bank และ /vendor/withdraw (เลือกบัญชีที่จะรับเงิน)
+ *
+ * .sort(...)  ตัวที่ isDefault = true ขึ้นก่อน
+ */
 export function listBankAccounts(vendorId: ID): BankAccount[] {
-  void vendorId;
-  return notImplemented("listBankAccounts");
+  return readStore("bankAccounts")
+    .filter((b) => b.vendorId === vendorId)
+    .sort((a, b) => Number(b.isDefault) - Number(a.isDefault));
 }
 
+/**
+ * saveBankAccount — เพิ่มบัญชีใหม่ หรือแก้บัญชีเดิม
+ *
+ * รับ:  BankAccount (id ว่าง "" = เพิ่มใหม่ ระบบสร้าง id ให้)
+ * คืน:  บัญชีที่บันทึกแล้ว
+ * ใครเรียก: หน้า /vendor/bank
+ *
+ * กติกา: ร้านหนึ่งมีบัญชีหลัก (isDefault) ได้แค่บัญชีเดียว
+ *        บัญชีแรกของร้านเป็นบัญชีหลักอัตโนมัติ
+ */
 export function saveBankAccount(account: BankAccount): BankAccount {
-  void account;
-  return notImplemented("saveBankAccount");
+  if (
+    !account.bankName.trim() ||
+    !account.accountName.trim() ||
+    !account.accountNumber.trim()
+  ) {
+    throw new Error("กรอกชื่อธนาคาร ชื่อบัญชี และเลขบัญชีให้ครบ");
+  }
+
+  const isNew = !account.id;
+  const hasAccount = listBankAccounts(account.vendorId).length > 0;
+  const saved: BankAccount = {
+    ...account,
+    id: isNew ? generateId("ba") : account.id,
+    isDefault: account.isDefault || !hasAccount,
+  };
+
+  updateStore("bankAccounts", (accounts) => {
+    // ตั้งบัญชีนี้เป็นหลัก > บัญชีอื่นของร้านเดียวกันไม่เป็นหลักแล้ว
+    const others = accounts
+      .filter((b) => b.id !== saved.id)
+      .map((b) =>
+        saved.isDefault && b.vendorId === saved.vendorId
+          ? { ...b, isDefault: false }
+          : b,
+      );
+    return [...others, saved];
+  });
+  return saved;
 }
 
 /* ═══════════════════════ ฝั่ง Organizer (เตย) ═══════════════════════ */
