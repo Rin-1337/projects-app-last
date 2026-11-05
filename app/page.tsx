@@ -1,14 +1,18 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { EventBanner } from "@/components/customer/EventBanner";
 import { EventCard } from "@/components/customer/EventCard";
 import { HomeHeader } from "@/components/customer/HomeHeader";
 import { useIsClient } from "@/components/customer/useIsClient";
+import { ROLE_HOME, useAuth } from "@/lib/auth";
 import type { EventItem } from "@/lib/types";
 import { useStore } from "@/lib/useStore";
 
 // หน้าแรก — ผู้รับผิดชอบ: ทิวากร
-// ทุกคนเข้าหน้านี้ได้ ไม่ต้องล็อกอิน และเห็นเนื้อหาเหมือนกัน ต่างกันแค่ปุ่มบนแถบด้านบน
+// หน้านี้สำหรับคนที่ยังไม่ล็อกอินและลูกค้า ทั้งสองกลุ่มเห็นเนื้อหาเหมือนกัน ต่างกันแค่ปุ่มบนแถบด้านบน
+// Role อื่นเข้ามาจะถูกพากลับไปหน้าของ Role ตัวเอง
 
 /** เลือกเฉพาะงานที่เปิดขาย แล้วเรียงจากงานที่จะถึงก่อน */
 function getPublishedEvents(events: EventItem[]) {
@@ -53,7 +57,22 @@ function HomeContent() {
 }
 
 export default function HomePage() {
+  const router = useRouter();
+  const { user } = useAuth();
   const isClient = useIsClient();
+
+  const isOtherRole = user !== null && user.role !== "customer";
+
+  useEffect(() => {
+    if (user !== null && user.role !== "customer") {
+      router.replace(ROLE_HOME[user.role]);
+    }
+  }, [user, router]);
+
+  // ไม่แสดงหน้าแรกระหว่างรอย้ายหน้า จะได้ไม่เห็นเนื้อหาแวบหนึ่ง
+  if (isOtherRole) {
+    return <p className="p-10 text-center text-sm text-slate-500">กำลังพาไปหน้าของคุณ...</p>;
+  }
 
   return (
     <div className="min-h-full">
