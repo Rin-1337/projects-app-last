@@ -4,42 +4,42 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type SubmitEvent } from "react";
 import { Button, Card, Input } from "@/components/ui";
-import { registerCustomer } from "@/lib/services/users";
-import { writeStore } from "@/lib/storage";
+import { useAuth } from "@/lib/auth";
 
+// ผู้รับผิดชอบ: ทิวากร
 export default function RegisterPage() {
   const router = useRouter();
+  const { register } = useAuth();
   const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
 
+    // 1. อ่านค่าที่กรอกในฟอร์ม
     const formData = new FormData(event.currentTarget);
+    const name = String(formData.get("name") ?? "");
+    const email = String(formData.get("email") ?? "");
+    const phone = String(formData.get("phone") ?? "");
     const password = String(formData.get("password") ?? "");
     const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
+    // 2. เช็กว่ากรอกรหัสผ่านตรงกันทั้งสองช่อง
     if (password !== confirmPassword) {
-      setError("รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน");
+      setError("รหัสผ่านไม่ตรงกัน");
       return;
     }
 
-    setIsSubmitting(true);
-    const result = registerCustomer({
-      name: String(formData.get("name") ?? ""),
-      email: String(formData.get("email") ?? ""),
-      password,
-      phone: String(formData.get("phone") ?? ""),
-    });
-
+    // 3. สมัครสมาชิก ถ้าไม่สำเร็จให้แสดงเหตุผล เช่น อีเมลซ้ำ
+    const result = register({ name, email, phone, password });
     if (!result.ok) {
       setError(result.reason);
-      setIsSubmitting(false);
       return;
     }
 
-    writeStore("session", { userId: result.user.id, role: result.user.role });
+    // 4. ล้างฟอร์มแล้วไปหน้าแรกของลูกค้า
+    //    ต้องล้างเอง เพราะ Next.js จำหน้าเก่าไว้ ถ้ากลับมารหัสผ่านจะยังค้างในช่อง
+    event.currentTarget.reset();
     router.replace("/customer");
   }
 
@@ -48,17 +48,16 @@ export default function RegisterPage() {
       <Card>
         <h1 className="text-2xl font-bold text-slate-900">สมัครสมาชิก</h1>
         <p className="mt-2 text-sm text-slate-600">
-          สร้างบัญชีลูกค้าเพื่อเข้าร่วมกิจกรรมและซื้อบัตร
+          สร้างบัญชีลูกค้าเพื่อเข้าร่วมงานและซื้อบัตร
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <Input
             label="ชื่อ-นามสกุล"
             name="name"
-            type="text"
             autoComplete="name"
-            required
             maxLength={100}
+            required
           />
           <Input
             label="อีเมล"
@@ -87,7 +86,6 @@ export default function RegisterPage() {
             name="confirmPassword"
             type="password"
             autoComplete="new-password"
-            minLength={4}
             required
           />
 
@@ -97,8 +95,8 @@ export default function RegisterPage() {
             </p>
           )}
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "กำลังสมัครสมาชิก..." : "สมัครสมาชิก"}
+          <Button type="submit" size="lg" className="w-full">
+            สมัครสมาชิก
           </Button>
         </form>
 
