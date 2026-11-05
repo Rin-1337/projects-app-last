@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { NavLinks } from "@/components/shared/RoleNav";
 import { UserMenu } from "@/components/shared/UserMenu";
-import { ROLE_HOME, useAuth } from "@/lib/auth";
-import type { User } from "@/lib/types";
+import { useAuth } from "@/lib/auth";
 import { CUSTOMER_NAV } from "./nav";
 import { useIsClient } from "./useIsClient";
 
@@ -27,23 +26,6 @@ function GuestButtons() {
   );
 }
 
-/** ปุ่มสำหรับคนที่ล็อกอินแล้ว */
-function UserButtons({ user }: { user: User }) {
-  // หน้าหลักของลูกค้าคือหน้าแรกอยู่แล้ว จึงมีปุ่มแดชบอร์ดเฉพาะ Role อื่น
-  const showDashboard = user.role !== "customer";
-
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      {showDashboard && (
-        <Link href={ROLE_HOME[user.role]} className={PRIMARY_LINK}>
-          แดชบอร์ด
-        </Link>
-      )}
-      <UserMenu />
-    </div>
-  );
-}
-
 /** เลือกว่าจะแสดงปุ่มชุดไหน */
 function HeaderButtons() {
   const { user } = useAuth();
@@ -59,7 +41,7 @@ function HeaderButtons() {
     return <GuestButtons />;
   }
 
-  return <UserButtons user={user} />;
+  return <UserMenu />;
 }
 
 /** แถบด้านบนของหน้าแรก: ชื่อเว็บ + ปุ่ม + เมนู */

@@ -4,7 +4,7 @@ import { ComingSoon } from "@/components/shared/ComingSoon";
 export default function CustomerOrdersPage() {
   return (
     <ComingSoon
-      title="คำสั่งซื้อของฉัน"
+      title="ประวัติรายการ"
       owner="ปอ"
       todo={["ประวัติคำสั่งซื้อเสื้อ/ของที่ระลึก", "สถานะการจัดส่ง + เลขพัสดุ"]}
     />
