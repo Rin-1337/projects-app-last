@@ -4,7 +4,7 @@ import { ComingSoon } from "@/components/shared/ComingSoon";
 export default function AdminPage() {
   return (
     <ComingSoon
-      title="Dashboard ภาพรวมระบบ eieieieiei"
+      title="Dashboard ภาพรวมระบบ"
       owner="นัฐวิ"
       todo={["จำนวนผู้ใช้แต่ละ Role", "ยอด Token ในระบบ / ยอดเติม / ยอดถอน", "คำขอที่รออนุมัติ"]}
     />
