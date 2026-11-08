@@ -29,8 +29,7 @@ export function saveEvent(event: EventItem): EventItem {
 }
 
 export function listTicketTypes(eventId: ID): TicketType[] {
-  void eventId;
-  return notImplemented("listTicketTypes");
+    return readStore("ticketTypes").filter((type) => type.eventId === eventId);
 }
 
 export function saveTicketType(ticketType: TicketType): TicketType {
