@@ -7,10 +7,11 @@
  */
 import type { EventItem, ID, TicketType } from "../types";
 import { notImplemented } from "./_todo";
+import { readStore } from "../storage";
 
 /** Event ที่เปิดขาย (หน้าแรก / Customer) */
 export function listPublishedEvents(): EventItem[] {
-  return notImplemented("listPublishedEvents");
+    return readStore("events").filter((event) => event.status === "published");
 }
 
 /** Event ที่ Organizer คนนี้รับผิดชอบ */
