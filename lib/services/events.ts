@@ -51,6 +51,31 @@ export function listTicketTypes(eventId: ID): TicketType[] {
 }
 
 export function saveTicketType(ticketType: TicketType): TicketType {
-  void ticketType;
-  return notImplemented("saveTicketType");
+  if (ticketType.name.trim() === "") {
+    throw new Error("กรุณากรอกชื่อประเภทบัตร");
+  }
+  if (ticketType.price < 0) {
+    throw new Error("ราคาต้องไม่ติดลบ");
+  }
+  if (ticketType.quota < 0) {
+    throw new Error("โควตาต้องไม่ติดลบ");
+  }
+
+  const isEdit = readStore("ticketTypes").some((t) => t.id === ticketType.id);
+
+  if (isEdit) {
+    updateStore("ticketTypes", (current) =>
+      current.map((t) =>
+        t.id === ticketType.id ? { ...t, ...ticketType } : t,
+      ),
+    );
+    return ticketType;
+  }
+
+  const newTicketType: TicketType = {
+    ...ticketType,
+    id: ticketType.id || generateId("tt"),
+  };
+  updateStore("ticketTypes", (current) => [...current, newTicketType]);
+  return newTicketType;
 }
