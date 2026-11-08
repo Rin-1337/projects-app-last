@@ -102,8 +102,7 @@ export function confirmTicketPayment(orderId: ID): Ticket[] {
 }
 
 export function listTicketsByCustomer(customerId: ID): Ticket[] {
-  void customerId;
-  return notImplemented("listTicketsByCustomer");
+    return readStore("tickets").filter((ticket) => ticket.customerId === customerId);
 }
 
 export function listOrdersByEvent(eventId: ID): TicketOrder[] {
