@@ -7,7 +7,7 @@
  */
 import type { EventItem, ID, TicketType } from "../types";
 import { notImplemented } from "./_todo";
-import { readStore } from "../storage";
+import { generateId, nowISO, readStore, updateStore } from "../storage";
 
 /** Event ที่เปิดขาย (หน้าแรก / Customer) */
 export function listPublishedEvents(): EventItem[] {
@@ -24,8 +24,26 @@ export function getEvent(eventId: ID): EventItem | undefined {
 }
 
 export function saveEvent(event: EventItem): EventItem {
-  void event;
-  return notImplemented("saveEvent");
+    if (event.title.trim() === "") {
+    throw new Error("กรุณากรอกชื่องาน");
+  }
+
+  const isEdit = readStore("events").some((e) => e.id === event.id);
+
+  if (isEdit) {
+    updateStore("events", (current) =>
+      current.map((e) => (e.id === event.id ? { ...e, ...event } : e)),
+    );
+    return event;
+  }
+
+  const newEvent: EventItem = {
+    ...event,
+    id: event.id || generateId("ev"),
+    createdAt: event.createdAt || nowISO(),
+  };
+  updateStore("events", (current) => [...current, newEvent]);
+  return newEvent;
 }
 
 export function listTicketTypes(eventId: ID): TicketType[] {
