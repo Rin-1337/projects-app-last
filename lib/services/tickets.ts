@@ -106,8 +106,7 @@ export function listTicketsByCustomer(customerId: ID): Ticket[] {
 }
 
 export function listOrdersByEvent(eventId: ID): TicketOrder[] {
-  void eventId;
-  return notImplemented("listOrdersByEvent");
+    return readStore("ticketOrders").filter((order) => order.eventId === eventId);
 }
 
 /** สแกน QR บัตร → คืนผลว่าเช็กอินได้หรือไม่ */
