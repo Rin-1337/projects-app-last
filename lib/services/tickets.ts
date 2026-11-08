@@ -7,7 +7,6 @@
  */
 import { generateId, nowISO, readStore, updateStore } from "../storage";
 import type { ID, Ticket, TicketOrder } from "../types";
-import { notImplemented } from "./_todo";
 
 /**
  * createTicketOrder — สร้างคำสั่งซื้อสถานะ pending (ยังไม่ตัดโควตา)
@@ -102,13 +101,11 @@ export function confirmTicketPayment(orderId: ID): Ticket[] {
 }
 
 export function listTicketsByCustomer(customerId: ID): Ticket[] {
-  void customerId;
-  return notImplemented("listTicketsByCustomer");
+    return readStore("tickets").filter((ticket) => ticket.customerId === customerId);
 }
 
 export function listOrdersByEvent(eventId: ID): TicketOrder[] {
-  void eventId;
-  return notImplemented("listOrdersByEvent");
+    return readStore("ticketOrders").filter((order) => order.eventId === eventId);
 }
 
 /** สแกน QR บัตร → คืนผลว่าเช็กอินได้หรือไม่ */
@@ -116,7 +113,23 @@ export function checkIn(
   qrCode: string,
   eventId: ID,
 ): { ok: true; ticket: Ticket } | { ok: false; reason: string } {
-  void qrCode;
-  void eventId;
-  return notImplemented("checkIn");
+  const ticket = readStore("tickets").find((t) => t.qrCode === qrCode.trim());
+  if (!ticket) {
+    return { ok: false, reason: "ไม่พบบัตรนี้ในระบบ" };
+  }
+  if (ticket.eventId !== eventId) {
+    return { ok: false, reason: "บัตรนี้เป็นของงานอื่น" };
+  }
+  if (ticket.checkedIn) {
+    const reason = ticket.checkedInAt
+      ? `บัตรนี้เช็กอินไปแล้วเมื่อ ${new Date(ticket.checkedInAt).toLocaleString("th-TH")}`
+      : "บัตรนี้เช็กอินไปแล้ว";
+    return { ok: false, reason };
+  }
+
+  const updated: Ticket = { ...ticket, checkedIn: true, checkedInAt: nowISO() };
+  updateStore("tickets", (current) =>
+    current.map((t) => (t.id === updated.id ? updated : t)),
+  );
+  return { ok: true, ticket: updated };
 }
