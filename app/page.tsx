@@ -4,24 +4,15 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { EventBanner } from "@/components/customer/EventBanner";
 import { EventCard } from "@/components/customer/EventCard";
+import { getPublishedEvents } from "@/components/customer/getPublishedEvents";
 import { HomeHeader } from "@/components/customer/HomeHeader";
 import { useIsClient } from "@/components/customer/useIsClient";
 import { ROLE_HOME, useAuth } from "@/lib/auth";
-import type { EventItem } from "@/lib/types";
 import { useStore } from "@/lib/useStore";
 
 // หน้าแรก — ผู้รับผิดชอบ: ทิวากร
 // หน้านี้สำหรับคนที่ยังไม่ล็อกอินและลูกค้า ทั้งสองกลุ่มเห็นเนื้อหาเหมือนกัน ต่างกันแค่ปุ่มบนแถบด้านบน
 // Role อื่นเข้ามาจะถูกพากลับไปหน้าของ Role ตัวเอง
-
-/** เลือกเฉพาะงานที่เปิดขาย แล้วเรียงจากงานที่จะถึงก่อน */
-function getPublishedEvents(events: EventItem[]) {
-  const publishedEvents = events.filter((event) => event.status === "published");
-
-  return publishedEvents.sort((a, b) => {
-    return new Date(a.startAt).getTime() - new Date(b.startAt).getTime();
-  });
-}
 
 /** เนื้อหาหน้าแรก: แบนเนอร์งานถัดไป + รายการงานทั้งหมด */
 function HomeContent() {
