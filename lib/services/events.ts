@@ -16,8 +16,7 @@ export function listPublishedEvents(): EventItem[] {
 
 /** Event ที่ Organizer คนนี้รับผิดชอบ */
 export function listEventsByOrganizer(organizerId: ID): EventItem[] {
-  void organizerId;
-  return notImplemented("listEventsByOrganizer");
+    return readStore("events").filter((event) => event.organizerId === organizerId);
 }
 
 export function getEvent(eventId: ID): EventItem | undefined {
