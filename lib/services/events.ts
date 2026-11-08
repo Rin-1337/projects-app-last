@@ -20,8 +20,7 @@ export function listEventsByOrganizer(organizerId: ID): EventItem[] {
 }
 
 export function getEvent(eventId: ID): EventItem | undefined {
-  void eventId;
-  return notImplemented("getEvent");
+    return readStore("events").find((event) => event.id === eventId);
 }
 
 export function saveEvent(event: EventItem): EventItem {
