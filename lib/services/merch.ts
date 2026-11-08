@@ -12,7 +12,6 @@ import type {
   MerchProduct,
   ShippingStatus,
 } from "../types";
-import { notImplemented } from "./_todo";
 import { generateId, nowISO, readStore, updateStore } from "../storage";
 
 
@@ -36,7 +35,7 @@ export function saveProduct(product: MerchProduct): MerchProduct {
   if (product.variants.some((v) => v.stock < 0)) {
     throw new Error("สต็อกต้องไม่ติดลบ");
   }
-  // ส่วนที่ 2 (บันทึกข้อมูล) จะเขียนต่อตรงนี้
+
   const exists =
     product.id !== "" &&
     readStore("merchProducts").some((p) => p.id === product.id);
@@ -77,7 +76,35 @@ export function deleteProduct(productId: ID): void {
     list.filter((p) => p.id !== productId),
   );
 }
+/** เช็กตะกร้า แล้วคืนรายการที่ใช้ราคาจริงจากระบบ (ไม่เชื่อราคาที่หน้าเว็บส่งมา) */
+function checkItems(eventId: ID, items: MerchOrderItem[]): MerchOrderItem[] {
+  if (items.length === 0) {
+    throw new Error("กรุณาเลือกสินค้าอย่างน้อย 1 รายการ");
+  }
+  const products = readStore("merchProducts");
 
+  return items.map((item) => {
+    if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
+      throw new Error("จำนวนต้องเป็นจำนวนเต็มมากกว่า 0");
+    }
+    const product = products.find(
+      (p) => p.id === item.productId && p.eventId === eventId,
+    );
+    if (!product || !product.active) {
+      throw new Error("ไม่พบสินค้านี้ หรือสินค้าปิดขายแล้ว");
+    }
+    const variant = product.variants.find((v) => v.size === item.size);
+    if (!variant) {
+      throw new Error(`ไม่พบไซส์ ${item.size} ของ ${product.name}`);
+    }
+    if (variant.stock < item.quantity) {
+      throw new Error(
+        `${product.name} ไซส์ ${item.size} เหลือ ${variant.stock} ชิ้น`,
+      );
+    }
+    return { ...item, unitPrice: product.price };
+  });
+}
 /** ลูกค้าสั่งซื้อออนไลน์ (ชำระ QR) — ตัดสต็อกเมื่อชำระสำเร็จ */
 export function createOnlineOrder(input: {
   eventId: ID;
@@ -90,19 +117,18 @@ export function createOnlineOrder(input: {
   if (shippingAddress.trim() === "") {
     throw new Error("กรุณากรอกที่อยู่จัดส่ง");
   }
-  // ... (เช็กรายการสินค้า, คำนวณ total) ...
-  const total = items.reduce(
+  const checked = checkItems(eventId, items);
+  const total = checked.reduce(
     (sum, item) => sum + item.unitPrice * item.quantity,
     0,
   );
 
   const order: MerchOrder = {
-    // ... (ข้อมูลออเดอร์) ...
     id: generateId("mo"),
     eventId,
     customerId,
     channel: "online",
-    items,
+    items:checked,
     total,
     paymentMethod: "qr",
     paymentStatus: "pending",
@@ -180,39 +206,16 @@ export function recordBoothSale(input: {
 }): MerchOrder {
   const { eventId, items, paymentMethod } = input;
 
-  if (items.length === 0) {
-    throw new Error("กรุณาเลือกสินค้าอย่างน้อย 1 รายการ");
-  }
-
-  const products = readStore("merchProducts");
-
-  for (const item of items) {
-    if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
-      throw new Error("จำนวนต้องเป็นจำนวนเต็มมากกว่า 0");
-    }
-    const product = products.find((p) => p.id === item.productId);
-    if (!product) {
-      throw new Error("ไม่พบสินค้าในตะกร้า");
-    }
-    const variant = product.variants.find((v) => v.size === item.size);
-    if (!variant) {
-      throw new Error(`ไม่พบไซส์ ${item.size} ของ ${product.name}`);
-    }
-    if (variant.stock < item.quantity) {
-      throw new Error(
-        `${product.name} ไซส์ ${item.size} เหลือ ${variant.stock} ชิ้น`,
-      );
-    }
-  }
-  // ส่วนที่ 2 (ตัดสต็อก + สร้างคำสั่งซื้อ) จะเขียนต่อตรงนี้
-  const total = items.reduce(
+  const checked = checkItems(eventId, items);
+  
+  const total = checked.reduce(
     (sum, item) => sum + item.unitPrice * item.quantity,
     0,
   );
 
   updateStore("merchProducts", (list) =>
     list.map((p) => {
-      const sold = items.filter((item) => item.productId === p.id);
+      const sold = checked.filter((item) => item.productId === p.id);
       if (sold.length === 0) return p;
       return {
         ...p,
@@ -231,7 +234,7 @@ export function recordBoothSale(input: {
     eventId,
     customerId: null,
     channel: "booth",
-    items,
+    items: checked,
     total,
     paymentMethod,
     paymentStatus: "paid",
