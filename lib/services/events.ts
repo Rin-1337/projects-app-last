@@ -6,7 +6,6 @@
  * คนอื่นเรียกใช้ฟังก์ชันในไฟล์นี้ ห้ามเขียน events / ticketTypes เอง
  */
 import type { EventItem, ID, TicketType } from "../types";
-import { notImplemented } from "./_todo";
 import { generateId, nowISO, readStore, updateStore } from "../storage";
 
 /** Event ที่เปิดขาย (หน้าแรก / Customer) */
@@ -61,20 +60,24 @@ export function saveTicketType(ticketType: TicketType): TicketType {
     throw new Error("โควตาต้องไม่ติดลบ");
   }
 
-  const isEdit = readStore("ticketTypes").some((t) => t.id === ticketType.id);
+  const existing = readStore("ticketTypes").find((t) => t.id === ticketType.id);
 
-  if (isEdit) {
+  if (existing) {
+    if (ticketType.quota < existing.sold) {
+      throw new Error(`โควตาต้องไม่น้อยกว่าที่ขายไปแล้ว (${existing.sold} ใบ)`);
+    }
+    // sold ใช้ค่าจริงในระบบเสมอ ไม่ใช้ค่าจากฟอร์ม
+    const updated: TicketType = { ...existing, ...ticketType, sold: existing.sold };
     updateStore("ticketTypes", (current) =>
-      current.map((t) =>
-        t.id === ticketType.id ? { ...t, ...ticketType } : t,
-      ),
+      current.map((t) => (t.id === updated.id ? updated : t)),
     );
-    return ticketType;
+    return updated;
   }
 
   const newTicketType: TicketType = {
     ...ticketType,
     id: ticketType.id || generateId("tt"),
+    sold: 0, // บัตรใหม่ยังไม่มีใครซื้อ
   };
   updateStore("ticketTypes", (current) => [...current, newTicketType]);
   return newTicketType;
