@@ -151,7 +151,7 @@ function EventDetail() {
 
         {types.length === 0 && (
           <p className="py-6 text-center text-slate-500">
-            ยังไม่มีประเภทบัตร กด "เพิ่มประเภทบัตร" เพื่อเริ่ม
+            ยังไม่มีประเภทบัตร กด “เพิ่มประเภทบัตร” เพื่อเริ่ม
           </p>
         )}
       </Card>
