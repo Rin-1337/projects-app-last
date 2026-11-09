@@ -39,6 +39,8 @@ export default function OrganizerEventsPage() {
   const [startAt, setStartAt] = useState("");
   const [location, setLocation] = useState("");
   const [formError, setFormError] = useState("");
+  // ข้อความแดงของตาราง เช่น เปลี่ยนสถานะไม่สำเร็จ (แยกจาก formError ของหน้าต่าง)
+  const [error, setError] = useState("");
 
   function openCreate() {
     setEditing("new");
@@ -101,6 +103,16 @@ export default function OrganizerEventsPage() {
     }
   }
 
+  function changeStatus(ev: EventItem, status: EventStatus) {
+    try {
+      // เอา Event เดิมทั้งก้อน เปลี่ยนแค่ status ช่องเดียว
+      saveEvent({ ...ev, status });
+      setError("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "เปลี่ยนสถานะไม่สำเร็จ");
+    }
+  }
+
   const modalTitle =
     editing === "new"
       ? "สร้าง Event ใหม่"
@@ -117,6 +129,8 @@ export default function OrganizerEventsPage() {
             สร้าง Event
           </Button>
         </div>
+
+        {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -146,13 +160,41 @@ export default function OrganizerEventsPage() {
                     </Badge>
                   </td>
                   <td className="py-2 text-right">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => openEdit(ev)}
-                    >
-                      แก้ไข
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => openEdit(ev)}
+                      >
+                        แก้ไข
+                      </Button>
+                      {ev.status === "draft" && (
+                        <Button
+                          size="sm"
+                          onClick={() => changeStatus(ev, "published")}
+                        >
+                          เปิดขาย
+                        </Button>
+                      )}
+                      {ev.status === "published" && (
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() => changeStatus(ev, "closed")}
+                        >
+                          ปิดขาย
+                        </Button>
+                      )}
+                      {ev.status === "closed" && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => changeStatus(ev, "published")}
+                        >
+                          เปิดขายอีกครั้ง
+                        </Button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
