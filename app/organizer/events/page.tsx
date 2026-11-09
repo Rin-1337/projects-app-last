@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { Badge, Button, Card, CardTitle, Input, Modal } from "@/components/ui";
@@ -161,6 +162,12 @@ export default function OrganizerEventsPage() {
                   </td>
                   <td className="py-2 text-right">
                     <div className="flex justify-end gap-2">
+                      <Link
+                        href={`/organizer/events/${ev.id}`}
+                        className="rounded-lg border border-slate-300 px-3 py-1 text-sm text-slate-700 hover:bg-slate-50"
+                      >
+                        ประเภทบัตร
+                      </Link>
                       <Button
                         size="sm"
                         variant="secondary"
