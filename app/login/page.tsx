@@ -68,7 +68,7 @@ export default function LoginPage() {
       <Card>
         <h1 className="text-2xl font-bold text-slate-900">เข้าสู่ระบบ</h1>
         <p className="mt-2 text-sm text-slate-600">
-          กรอกอีเมลและรหัสผ่านเพื่อเข้าใช้งาน
+          กรอกอีเมลและรหัสผ่านเพื่อเข้าใช้งานๆไำๆไำๆไำๆไำๆ
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
