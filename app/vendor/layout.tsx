@@ -2,6 +2,7 @@ import { RoleGuard } from "@/components/shared/RoleGuard";
 import { RoleShell, type NavItem } from "@/components/shared/RoleShell";
 
 // ผู้รับผิดชอบ: สุรัมภา
+export const instant = false;
 
 const nav: NavItem[] = [
   { href: "/vendor", label: "Dashboard" },
