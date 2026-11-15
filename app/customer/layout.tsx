@@ -3,6 +3,7 @@ import { RoleGuard } from "@/components/shared/RoleGuard";
 import { RoleShell } from "@/components/shared/RoleShell";
 
 // ผู้รับผิดชอบ: ทิวากร
+export const instant = false;
 
 export default function CustomerLayout({ children }: LayoutProps<"/customer">) {
   return (
