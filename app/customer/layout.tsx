@@ -1,4 +1,4 @@
-import { CUSTOMER_NAV } from "@/components/customer/nav";
+import { CUSTOMER_NAV } from "@/components/customer/common/nav";
 import { RoleGuard } from "@/components/shared/RoleGuard";
 import { RoleShell } from "@/components/shared/RoleShell";
 

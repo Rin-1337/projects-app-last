@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { EventCard } from "@/components/customer/EventCard";
-import { getPublishedEvents } from "@/components/customer/getPublishedEvents";
+import { EventCard } from "@/components/customer/common/EventCard";
+import { getPublishedEvents } from "@/components/customer/common/getPublishedEvents";
 import { Input } from "@/components/ui";
 import type { EventItem } from "@/lib/types";
 import { useStore } from "@/lib/useStore";

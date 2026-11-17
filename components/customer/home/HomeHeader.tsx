@@ -4,8 +4,8 @@ import Link from "next/link";
 import { NavLinks } from "@/components/shared/RoleNav";
 import { UserMenu } from "@/components/shared/UserMenu";
 import { useAuth } from "@/lib/auth";
-import { CUSTOMER_NAV } from "./nav";
-import { useIsClient } from "./useIsClient";
+import { CUSTOMER_NAV } from "@/components/customer/common/nav";
+import { useIsClient } from "@/components/customer/common/useIsClient";
 
 const PRIMARY_LINK =
   "rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700";
