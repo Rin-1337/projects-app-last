@@ -9,6 +9,9 @@ import { useStore } from "@/lib/useStore";
 // ผลการสแกนล่าสุด: ok บอกสีเขียว/แดง, message คือข้อความหลัก, detail คือข้อมูลเสริม
 type Result = { ok: boolean; message: string; detail?: string };
 
+// ทุก QR ของระบบขึ้นต้นด้วยคำนี้ (ดู confirmTicketPayment ใน tickets.ts)
+const PREFIX = "TICKET:";
+
 export default function OrganizerCheckinPage() {
   const { user } = useAuth();
   const organizerId = user?.id ?? "";
@@ -20,7 +23,8 @@ export default function OrganizerCheckinPage() {
 
   // งานที่ผู้ใช้เลือกใน dropdown ("" = ยังไม่เลือก)
   const [pickedEventId, setPickedEventId] = useState("");
-  const [qrCode, setQrCode] = useState("");
+  // ช่องรหัสเริ่มต้นด้วย "TICKET:" ให้พิมพ์ต่อท้ายได้เลย
+  const [qrCode, setQrCode] = useState(PREFIX);
   const [result, setResult] = useState<Result | null>(null);
 
   // งานที่ใช้จริง: ถ้าที่เลือกไว้ไม่อยู่ในงานของเรา ให้ใช้งานแรกแทน
@@ -33,17 +37,31 @@ export default function OrganizerCheckinPage() {
   const eventTickets = tickets.filter((t) => t.eventId === eventId);
   const checkedInCount = eventTickets.filter((t) => t.checkedIn).length;
 
+  // เครื่องสแกนหรือการวางรหัสเต็ม ๆ ลงช่องที่มี "TICKET:" อยู่แล้ว
+  // จะได้ "TICKET:TICKET:..." → ตัดส่วนซ้ำออกให้เหลือครั้งเดียว
+  function handleChange(value: string) {
+    setQrCode(value.replace(PREFIX + PREFIX, PREFIX));
+  }
+
   function handleCheckIn() {
     if (eventId === "") return;
 
-    if (qrCode.trim() === "") {
+    let code = qrCode.trim();
+
+    // ว่าง หรือมีแค่ "TICKET:" โดยยังไม่มีรหัสต่อท้าย
+    if (code === "" || code === PREFIX) {
       setResult({ ok: false, message: "กรุณากรอกรหัส QR บนบัตร" });
       return;
     }
 
+    // ผู้ใช้ลบ "TICKET:" ออกแล้วพิมพ์เฉพาะรหัส เช่น tk_demo1 → เติมให้
+    if (!code.startsWith(PREFIX)) {
+      code = PREFIX + code;
+    }
+
     // checkIn ไม่ throw แต่คืน { ok: true, ticket } | { ok: false, reason }
     // เพราะสแกนผิดเป็นเรื่องปกติหน้างาน จึงใช้ if (!res.ok) แทน try/catch
-    const res = checkIn(qrCode, eventId);
+    const res = checkIn(code, eventId);
 
     // ไม่ผ่าน → แสดงเหตุผลจาก service (ไม่ล้างช่อง จะได้แก้รหัสที่พิมพ์ผิดได้)
     if (!res.ok) {
@@ -59,7 +77,7 @@ export default function OrganizerCheckinPage() {
       message: "เช็กอินสำเร็จ",
       detail: `${res.ticket.attendeeName} · บัตร${typeName}`,
     });
-    setQrCode(""); // ล้างช่องให้พร้อมสแกนใบถัดไป
+    setQrCode(PREFIX); // ล้างช่องกลับเป็น "TICKET:" พร้อมสแกนใบถัดไป
   }
 
   if (myEvents.length === 0) {
@@ -106,9 +124,9 @@ export default function OrganizerCheckinPage() {
           </div>
 
           <Input
-            label="รหัส QR บนบัตร (เช่น TICKET:tk_demo1)"
+            label="รหัส QR บนบัตร (พิมพ์ต่อท้าย TICKET: เช่น tk_demo1)"
             value={qrCode}
-            onChange={(e) => setQrCode(e.target.value)}
+            onChange={(e) => handleChange(e.target.value)}
           />
 
           <Button type="submit">เช็กอิน</Button>
