@@ -5,16 +5,17 @@
  * เจ้าของ: ทิวากร (Customer)
  *
  * ข้อมูลที่ไฟล์นี้ดูแล: session — หน้าเว็บห้ามเขียนเอง ให้เรียกผ่าน useAuth()
+ * นอกจากนี้ยังแก้ชื่อ / เบอร์โทร / รหัสผ่าน ของผู้ใช้ใน users ด้วย (หน้า /customer/profile)
  *
  * วิธีใช้ในหน้าเว็บ
- *   const { user, login, logout } = useAuth();
+ *   const { user, login, logout, updateProfile, changePassword } = useAuth();
  *
  * ทำไมไม่มี AuthProvider
  *   useStore ทำให้ทุกหน้าเห็นข้อมูลล่าสุดอยู่แล้ว จึงไม่ต้องสร้าง Provider เพิ่ม
  */
 
 import { findUserByEmail, registerCustomer } from "./services/users";
-import { readStore, writeStore } from "./storage";
+import { readStore, updateStore, writeStore } from "./storage";
 import type { Role, Session, User } from "./types";
 import { useStore } from "./useStore";
 
@@ -75,6 +76,71 @@ function register(input: RegisterInput) {
   return result;
 }
 
+/** ผลของการแก้ข้อมูล: สำเร็จ หรือไม่สำเร็จพร้อมเหตุผล */
+type UpdateResult = { ok: true } | { ok: false; reason: string };
+
+/**
+ * updateProfile — แก้ชื่อและเบอร์โทรของผู้ใช้ที่ล็อกอินอยู่
+ * อีเมลแก้ไม่ได้ เพราะใช้เป็นชื่อสำหรับล็อกอิน
+ */
+function updateProfile(userId: string, name: string, phone: string): UpdateResult {
+  const newName = name.trim();
+  const newPhone = phone.trim();
+
+  if (newName === "") {
+    return { ok: false, reason: "กรุณากรอกชื่อ" };
+  }
+  // เบอร์โทรไม่บังคับ แต่ถ้ากรอกต้องเป็นตัวเลข 9-10 หลัก (กติกาเดียวกับฟอร์มที่อยู่จัดส่ง)
+  if (newPhone !== "" && !/^[0-9]{9,10}$/.test(newPhone)) {
+    return { ok: false, reason: "เบอร์โทรต้องเป็นตัวเลข 9-10 หลัก" };
+  }
+
+  // ไม่กรอกเบอร์ = เก็บเป็น undefined (เหมือนตอนสมัครสมาชิก)
+  let phoneToSave: string | undefined = undefined;
+  if (newPhone !== "") {
+    phoneToSave = newPhone;
+  }
+
+  // แก้เฉพาะคนนี้ คนอื่นคงเดิม
+  updateStore("users", (users) =>
+    users.map((u) => {
+      if (u.id !== userId) {
+        return u;
+      }
+      return { ...u, name: newName, phone: phoneToSave };
+    }),
+  );
+  return { ok: true };
+}
+
+/**
+ * changePassword — เปลี่ยนรหัสผ่าน
+ * ต้องกรอกรหัสเดิมให้ถูกก่อน กันคนอื่นแอบเปลี่ยนตอนเราลืมออกจากระบบ
+ */
+function changePassword(userId: string, currentPassword: string, newPassword: string): UpdateResult {
+  const user = readStore("users").find((u) => u.id === userId);
+  if (!user) {
+    return { ok: false, reason: "ไม่พบผู้ใช้" };
+  }
+  if (user.password !== currentPassword) {
+    return { ok: false, reason: "รหัสผ่านเดิมไม่ถูกต้อง" };
+  }
+  // ขั้นต่ำ 4 ตัว เท่ากับตอนสมัครสมาชิก (validateAccount ใน users.ts)
+  if (newPassword.length < 4) {
+    return { ok: false, reason: "รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร" };
+  }
+
+  updateStore("users", (users) =>
+    users.map((u) => {
+      if (u.id !== userId) {
+        return u;
+      }
+      return { ...u, password: newPassword };
+    }),
+  );
+  return { ok: true };
+}
+
 /** หาว่าใครล็อกอินอยู่ ถ้ายังไม่ล็อกอิน หรือบัญชีถูกระงับ จะได้ null */
 function findLoggedInUser(session: Session | null, users: User[]) {
   if (!session) {
@@ -99,11 +165,11 @@ export function getCurrentUser() {
   return findLoggedInUser(readStore("session"), readStore("users"));
 }
 
-/** useAuth — ผู้ใช้ที่ล็อกอินอยู่ (ยังไม่ล็อกอินจะเป็น null) และฟังก์ชัน login, logout, register */
+/** useAuth — ผู้ใช้ที่ล็อกอินอยู่ (ยังไม่ล็อกอินจะเป็น null) และฟังก์ชัน login, logout, register, updateProfile, changePassword */
 export function useAuth() {
   const session = useStore("session");
   const users = useStore("users");
   const user = findLoggedInUser(session, users);
 
-  return { user, login, logout, register };
+  return { user, login, logout, register, updateProfile, changePassword };
 }
