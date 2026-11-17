@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { EventItem } from "@/lib/types";
-import { formatEventDate } from "./formatEventDate";
+import { formatEventDate } from "@/components/customer/common/formatEventDate";
 
 /** แบนเนอร์งานถัดไป ถ้างานไม่มีรูปปกจะเป็นพื้นสีน้ำเงิน */
 export function EventBanner({ event }: { event: EventItem }) {

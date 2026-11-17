@@ -2,11 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { EventBanner } from "@/components/customer/EventBanner";
-import { EventCard } from "@/components/customer/EventCard";
-import { getPublishedEvents } from "@/components/customer/getPublishedEvents";
-import { HomeHeader } from "@/components/customer/HomeHeader";
-import { useIsClient } from "@/components/customer/useIsClient";
+import { EventBanner } from "@/components/customer/home/EventBanner";
+import { EventCard } from "@/components/customer/common/EventCard";
+import { getPublishedEvents } from "@/components/customer/common/getPublishedEvents";
+import { HomeHeader } from "@/components/customer/home/HomeHeader";
+import { useIsClient } from "@/components/customer/common/useIsClient";
 import { ROLE_HOME, useAuth } from "@/lib/auth";
 import { useStore } from "@/lib/useStore";
 

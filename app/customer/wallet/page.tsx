@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { formatEventDate } from "@/components/customer/formatEventDate";
+import { formatEventDate } from "@/components/customer/common/formatEventDate";
 import { QRDisplay } from "@/components/shared/QRDisplay";
 import { Button, Card, CardTitle, Input, Modal } from "@/components/ui";
 import { useAuth } from "@/lib/auth";

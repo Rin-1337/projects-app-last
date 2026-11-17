@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { formatEventDate } from "@/components/customer/formatEventDate";
-import { TicketCard } from "@/components/customer/TicketCard";
+import { formatEventDate } from "@/components/customer/common/formatEventDate";
+import { TicketCard } from "@/components/customer/tickets/TicketCard";
 import { QRDisplay } from "@/components/shared/QRDisplay";
 import { Badge, Card, CardTitle, Modal, STATUS_TONE } from "@/components/ui";
 import { useAuth } from "@/lib/auth";

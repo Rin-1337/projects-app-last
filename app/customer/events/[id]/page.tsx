@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { BuyTicketForm } from "@/components/customer/BuyTicketForm";
-import { formatEventDate } from "@/components/customer/formatEventDate";
-import { PaymentModal } from "@/components/customer/PaymentModal";
+import { BuyTicketForm } from "@/components/customer/events/BuyTicketForm";
+import { formatEventDate } from "@/components/customer/common/formatEventDate";
+import { PaymentModal } from "@/components/customer/events/PaymentModal";
 import { Card } from "@/components/ui";
 import type { Ticket, TicketOrder } from "@/lib/types";
 import { useStore } from "@/lib/useStore";
