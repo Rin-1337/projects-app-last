@@ -5,14 +5,25 @@ import { Badge, Button, Card, CardTitle, Input, Modal } from "@/components/ui";
 import type { MerchProduct } from "@/lib/types";
 import { useStore } from "@/lib/useStore";
 import { deleteProduct, saveProduct } from "@/lib/services/merch";
+import { useAuth } from "@/lib/auth";
 
 // ผู้รับผิดชอบ: อรอนงค์
-// ชั่วคราว ระหว่างรอระบบล็อกอินของปอ
-const EVENT_ID = "ev_reunion";
-
 export default function OrganizerMerchProductsPage() {
+  const { user } = useAuth();
+  const organizerId = user?.id ?? "";
+
+  const events = useStore("events");
+  const myEvents = events.filter((e) => e.organizerId === organizerId);
+
+  // งานที่ผู้ใช้เลือกใน dropdown ("" = ยังไม่เลือก)
+  const [pickedEventId, setPickedEventId] = useState("");
+  // งานที่ใช้จริง: ถ้าที่เลือกไว้ไม่อยู่ในงานของเรา ให้ใช้งานแรกแทน
+  const eventId = myEvents.some((e) => e.id === pickedEventId)
+    ? pickedEventId
+    : (myEvents[0]?.id ?? "");
+
   const allProducts = useStore("merchProducts");
-  const products = allProducts.filter((p) => p.eventId === EVENT_ID);
+  const products = allProducts.filter((p) => p.eventId === eventId);
   // เปิดหน้าต่างเมื่อ modalOpen เป็น true
   // editing = null → กำลังเพิ่มสินค้าใหม่ / เป็นสินค้า → กำลังแก้ตัวนั้น
   const [modalOpen, setModalOpen] = useState(false);
@@ -84,9 +95,10 @@ export default function OrganizerMerchProductsPage() {
       setFormError("สต็อกต้องเป็นจำนวนเต็ม");
       return;
     }
+
      const product: MerchProduct = {
       id: editing?.id ?? "",
-      eventId: editing?.eventId ?? EVENT_ID,
+      eventId: editing?.eventId ?? eventId,
       name,
       description: description.trim() === "" ? undefined : description.trim(),
       image: editing?.image,
@@ -95,7 +107,6 @@ export default function OrganizerMerchProductsPage() {
       active: editing?.active ?? true,
       createdAt: editing?.createdAt ?? "",
     };
-
     try {
       saveProduct(product);
       closeModal();
@@ -125,8 +136,39 @@ export default function OrganizerMerchProductsPage() {
     }
   }
 
+  if (myEvents.length === 0) {
+    return (
+      <Card>
+        <p className="py-6 text-center text-slate-500">
+          ยังไม่มี Event ที่คุณรับผิดชอบ จึงยังจัดการสินค้าไม่ได้
+        </p>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-4">
+      {myEvents.length > 1 && (
+        <Card>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="merchEvent" className="text-sm text-slate-600">
+              งาน
+            </label>
+            <select
+              id="merchEvent"
+              className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2"
+              value={eventId}
+              onChange={(e) => setPickedEventId(e.target.value)}
+            >
+              {myEvents.map((ev) => (
+                <option key={ev.id} value={ev.id}>
+                  {ev.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        </Card>
+      )}
       <Card>
         <CardTitle>สินค้าและของที่ระลึก ({products.length} รายการ)</CardTitle>
         <div className="mb-3">
@@ -201,7 +243,7 @@ export default function OrganizerMerchProductsPage() {
         title={editing ? `แก้ไข · ${editing.name}` : "เพิ่มสินค้า"}
       >
         <form
-          className="w-full max-w-2xl"
+          className="w-full max-w-2xl space-y-4"
           onSubmit={(e) => {
             e.preventDefault();
             handleSave();
@@ -224,7 +266,7 @@ export default function OrganizerMerchProductsPage() {
             onChange={(e) => setDescription(e.target.value)}
           />
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <p className="text-sm text-slate-600">ไซส์และสต็อก</p>
             {variants.map((v, i) => (
               <div key={i} className="flex items-end gap-2 [&>*:not(button)]:min-w-0 [&>*:not(button)]:flex-1">
@@ -242,7 +284,6 @@ export default function OrganizerMerchProductsPage() {
                 <Button
                   size="sm"
                   variant="danger"
-                  className="shrink-0"
                   onClick={() => removeVariant(i)}
                 >
                   ลบ
@@ -251,7 +292,7 @@ export default function OrganizerMerchProductsPage() {
             ))}
             <Button size="sm" variant="secondary" onClick={addVariant}>
               + เพิ่มไซส์
-            </Button>  
+            </Button>
           </div>
 
           {formError && <p className="text-sm text-red-600">{formError}</p>}
