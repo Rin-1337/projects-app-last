@@ -12,5 +12,8 @@ component ที่ใช้เฉพาะส่วนลูกค้า — �
 | `tickets/` | บัตรของฉัน `app/customer/tickets` | `TicketCard` |
 | `shop/` | ร้านค้า `app/customer/shop` | `ProductCard`, `CartPanel`, `useCart` (ตะกร้า), `getCartRows` |
 | `checkout/` | สั่งซื้อ `app/customer/shop/checkout` | `AddressForm`, `OrderSummary`, `MerchPaymentModal` |
+| `orders/` | ประวัติคำสั่งซื้อ `app/customer/orders` | `MerchOrderCard` |
+| `profile/` | โปรไฟล์ `app/customer/profile` | `ProfileForm`, `PasswordForm` |
 
 หมายเหตุ: หน้า checkout ใช้ `useCart` และ `getCartRows` จากโฟลเดอร์ `shop/` ด้วย เพราะเป็นตะกร้าใบเดียวกัน
+หน้า orders ใช้ `MerchPaymentModal` จาก `checkout/` (ให้จ่ายคำสั่งซื้อที่ค้างไว้ต่อได้) และ `getSizeLabel` จาก `shop/`
