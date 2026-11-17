@@ -23,8 +23,6 @@
  *      ยอดเงิน = ราคาที่ Admin ตั้ง × จำนวน คำนวณโดยระบบ
  */
 import type { BankAccount, ID, TokenTransaction, Vendor } from "../types";
-// notImplemented ยังต้องใช้ในส่วนของเตยที่ยังไม่ได้เขียน — ห้ามลบ
-import { notImplemented } from "./_todo";
 import { generateId, nowISO, readStore, updateStore } from "../storage";
 // บันทึกการทำงานของ Admin (สร้างร้าน / แก้ราคา)
 import { logAction } from "./audit";
@@ -390,6 +388,30 @@ export interface VendorSalesRow {
 
 /** รายงานยอดขายของทุกร้านใน Event — ใช้เคลียร์เงินกับร้านหลังจบงาน */
 export function vendorSalesReport(eventId: ID): VendorSalesRow[] {
-  void eventId;
-  return notImplemented("vendorSalesReport");
+  // listVendors("") จะคืนร้านของทุกงาน จึงกัน eventId ว่างไว้ก่อน
+  if (!eventId) return [];
+
+  const transactions = readStore("tokenTransactions");
+  const withdrawals = readStore("withdrawals");
+
+  return listVendors(eventId).map((vendor) => {
+    // ยอดที่ร้านขายได้: ธุรกรรมชนิด payment ของร้านนี้
+    const sales = transactions.filter(
+      (tx) => tx.type === "payment" && tx.vendorId === vendor.id,
+    );
+    const totalReceived = sales.reduce((sum, tx) => sum + tx.amount, 0);
+
+    // ยอดที่ Admin โอนเงินให้ร้านแล้ว: เฉพาะคำขอถอนที่สถานะ transferred
+    const totalWithdrawn = withdrawals
+      .filter((w) => w.vendorId === vendor.id && w.status === "transferred")
+      .reduce((sum, w) => sum + w.amount, 0);
+
+    return {
+      vendor,
+      salesCount: sales.length,
+      totalReceived,
+      totalWithdrawn,
+      outstanding: totalReceived - totalWithdrawn,
+    };
+  });
 }
