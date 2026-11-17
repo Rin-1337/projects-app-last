@@ -4,17 +4,26 @@ import { useState } from "react";
 import { Button, Card, CardTitle, Input } from "@/components/ui";
 import { useStore } from "@/lib/useStore";
 import { recordBoothSale } from "@/lib/services/merch";
+import { useAuth } from "@/lib/auth";
 
 // ผู้รับผิดชอบ: อรอนงค์
-// ชั่วคราว ระหว่างรอระบบล็อกอินของปอ
-const EVENT_ID = "ev_reunion";
-
 type CartLine = { productId: string; size: string; quantity: number };
 
 export default function OrganizerMerchBoothPage() {
+  const { user } = useAuth();
+  const organizerId = user?.id ?? "";
+
+  const events = useStore("events");
+  const myEvents = events.filter((e) => e.organizerId === organizerId);
+
+  const [pickedEventId, setPickedEventId] = useState("");
+  const eventId = myEvents.some((e) => e.id === pickedEventId)
+    ? pickedEventId
+    : (myEvents[0]?.id ?? "");
+
   const allProducts = useStore("merchProducts");
   const products = allProducts.filter(
-    (p) => p.eventId === EVENT_ID && p.active,
+    (p) => p.eventId === eventId && p.active,
   );
 
   const [productId, setProductId] = useState("");
@@ -69,6 +78,16 @@ export default function OrganizerMerchBoothPage() {
     });
     setQuantity("1");
   }
+  function handleChangeEvent(id: string) {
+    setPickedEventId(id);
+    // เปลี่ยนงานแล้ว ของในตะกร้าและสินค้าที่เลือกเป็นของงานเก่า ต้องล้าง
+    setCart([]);
+    setProductId("");
+    setSize("");
+    setError("");
+    setSellError("");
+    setSuccess("");
+  }
 
   function removeLine(index: number) {
     setCart((lines) => lines.filter((_, i) => i !== index));
@@ -88,7 +107,7 @@ export default function OrganizerMerchBoothPage() {
         };
       });
       const order = recordBoothSale({
-        eventId: EVENT_ID,
+        eventId,
         items,
         paymentMethod,
       });
@@ -100,9 +119,38 @@ export default function OrganizerMerchBoothPage() {
       setSellError(err instanceof Error ? err.message : "ขายไม่สำเร็จ");
     }
   }
-
+  if (myEvents.length === 0) {
+    return (
+      <Card>
+        <p className="py-6 text-center text-slate-500">
+          ยังไม่มี Event ที่คุณรับผิดชอบ จึงยังขายหน้าบูทไม่ได้
+        </p>
+      </Card>
+    );
+  }
   return (
     <div className="space-y-4">
+      {myEvents.length > 1 && (
+        <Card>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="boothEvent" className="text-sm text-slate-600">
+              งาน
+            </label>
+            <select
+              id="boothEvent"
+              className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2"
+              value={eventId}
+              onChange={(e) => handleChangeEvent(e.target.value)}
+            >
+              {myEvents.map((ev) => (
+                <option key={ev.id} value={ev.id}>
+                  {ev.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        </Card>
+      )}
       <Card>
         <CardTitle>ขายหน้าบูท</CardTitle>
 

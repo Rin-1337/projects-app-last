@@ -14,9 +14,9 @@ import type {
 } from "../types";
 import { generateId, nowISO, readStore, updateStore } from "../storage";
 
-
 export function listProducts(eventId: ID): MerchProduct[] {
- return readStore("merchProducts").filter((p) => p.eventId === eventId);
+ 
+  return readStore("merchProducts").filter((p) => p.eventId === eventId);
 }
 
 export function listActiveProducts(eventId: ID): MerchProduct[] {
@@ -26,7 +26,9 @@ export function listActiveProducts(eventId: ID): MerchProduct[] {
 }
 
 export function saveProduct(product: MerchProduct): MerchProduct {
-  if (product.name.trim() === ""){
+  // ตัดช่องว่างหน้า-หลังของชื่อก่อนบันทึก
+  const name = product.name.trim();
+  if (name === "") {
     throw new Error("กรุณากรอกชื่อสินค้า");
   }
   if (!(product.price > 0)) {
@@ -36,18 +38,31 @@ export function saveProduct(product: MerchProduct): MerchProduct {
     throw new Error("สต็อกต้องไม่ติดลบ");
   }
 
+  // กันไซส์ซ้ำ (ไม่สนช่องว่างและตัวพิมพ์เล็ก-ใหญ่ เช่น "M" กับ "m ")
+  const variants = product.variants.map((v) => ({
+    ...v,
+    size: v.size.trim(),
+  }));
+  const sizes = variants.map((v) => v.size.toLowerCase());
+  if (new Set(sizes).size !== sizes.length) {
+    throw new Error("มีไซส์ซ้ำกัน กรุณาแก้ให้ไม่ซ้ำ");
+  }
+
+  const clean: MerchProduct = { ...product, name, variants };
+
   const exists =
-    product.id !== "" &&
-    readStore("merchProducts").some((p) => p.id === product.id);
-  
+    clean.id !== "" &&
+    readStore("merchProducts").some((p) => p.id === clean.id);
+
   if (exists) {
     updateStore("merchProducts", (list) =>
-      list.map((p) => (p.id === product.id ? { ...p, ...product } : p)),
+      list.map((p) => (p.id === clean.id ? { ...p, ...clean } : p)),
     );
-    return product;
+    return clean;
   }
+
   const created: MerchProduct = {
-    ...product,
+    ...clean,
     id: generateId("mp"),
     createdAt: nowISO(),
   };
@@ -76,6 +91,7 @@ export function deleteProduct(productId: ID): void {
     list.filter((p) => p.id !== productId),
   );
 }
+
 /** เช็กตะกร้า แล้วคืนรายการที่ใช้ราคาจริงจากระบบ (ไม่เชื่อราคาที่หน้าเว็บส่งมา) */
 function checkItems(eventId: ID, items: MerchOrderItem[]): MerchOrderItem[] {
   if (items.length === 0) {
@@ -105,6 +121,7 @@ function checkItems(eventId: ID, items: MerchOrderItem[]): MerchOrderItem[] {
     return { ...item, unitPrice: product.price };
   });
 }
+
 /** ลูกค้าสั่งซื้อออนไลน์ (ชำระ QR) — ตัดสต็อกเมื่อชำระสำเร็จ */
 export function createOnlineOrder(input: {
   eventId: ID;
@@ -128,7 +145,7 @@ export function createOnlineOrder(input: {
     eventId,
     customerId,
     channel: "online",
-    items:checked,
+    items: checked,
     total,
     paymentMethod: "qr",
     paymentStatus: "pending",
@@ -196,7 +213,6 @@ export function confirmOnlinePayment(orderId: ID): MerchOrder {
 
   return paid;
 }
-
 
 /** ขายหน้าบูท (เงินสด / QR) — ตัดสต็อกทันที */
 export function recordBoothSale(input: {
@@ -274,5 +290,5 @@ export function updateShipping(
 }
 
 export function listOrdersByCustomer(customerId: ID): MerchOrder[] {
-  return readStore("merchOrders").filter((o) => o.customerId === customerId)
+  return readStore("merchOrders").filter((o) => o.customerId === customerId);
 }
