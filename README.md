@@ -340,8 +340,8 @@ http://localhost:3000
 | Role      | Email                | ข้อมูลตัวอย่าง                                  |
 | --------- | -------------------- | ----------------------------------------------- |
 | Customer  | `somying@test.com`   | Customer ID `C0001` · 500 Token · มีบัตร 2 ใบ   |
-| Organizer | `organizer@test.com` | รับผิดชอบงานเลี้ยงรุ่น                           |
-| Vendor    | `vendor@test.com`    | ร้านลาเต้เย็น ราคา 60 Token                     |
+| Organizer | `organizer@test.com` | รับผิดชอบงานเลี้ยงรุ่นศิษย์เก่า 2026            |
+| Vendor    | `vendor@test.com`    | ร้านกาแฟศิษย์เก่า ขายลาเต้เย็น 60 Token          |
 | Admin     | `admin@test.com`     | -                                               |
 
 บัตรตัวอย่างสำหรับทดสอบ Check-in: `TICKET:tk_demo1` และ `TICKET:tk_demo2`
