@@ -165,8 +165,7 @@ export default function OrganizerMerchOrdersPage() {
                     {o.shippingStatus ? SHIPPING_LABEL[o.shippingStatus] : "-"}
                   </td>
                   <td className="py-2 pr-4">{o.trackingNo ?? "-"}</td>
-                  <td className="py-2 text-right">
-                    <td className="py-2 text-right">
+                  <td className="py-2 text-right">                    
                     {o.paymentStatus === "paid" && (
                       <Button
                         size="sm"
@@ -176,7 +175,6 @@ export default function OrganizerMerchOrdersPage() {
                         อัปเดตจัดส่ง
                       </Button>
                     )}
-                  </td>
                   </td>
                 </tr>
               ))}

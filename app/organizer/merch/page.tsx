@@ -157,7 +157,7 @@ export default function OrganizerMerchPage() {
                   <td className="py-2 pr-4">{row.name}</td>
                   <td className="py-2 pr-4">{row.size}</td>
                   <td className="py-2 pr-4">
-                    <Badge tone={row.stock === 0 ? "gray" : "green"}>
+                    <Badge tone={row.stock === 0 ? "gray" : "yellow"}>
                       {row.stock === 0 ? "หมด" : `${row.stock} ชิ้น`}
                     </Badge>
                   </td>
