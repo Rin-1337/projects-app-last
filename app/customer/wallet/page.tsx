@@ -41,7 +41,7 @@ export default function CustomerWalletPage() {
   const transactions = useStore("tokenTransactions");
   const vendors = useStore("vendors");
 
-  // ข้อความที่ลูกค้าพิมพ์ในช่อง "กรอกจำนวนเอง"
+  // จำนวนที่จะเติม (เป็นข้อความ เพราะผูกกับช่องกรอก) — กดปุ่มสำเร็จรูปก็จะเปลี่ยนค่านี้
   const [amountText, setAmountText] = useState("");
   // ข้อความแจ้งเตือนสีแดง (ว่าง = ไม่มี error)
   const [errorMessage, setErrorMessage] = useState("");
@@ -71,6 +71,11 @@ export default function CustomerWalletPage() {
   const myTransactions = transactions.filter((tx) => {
     return tx.fromUserId === userId || tx.toUserId === userId;
   });
+
+  // ───── จำนวนที่เลือก ─────
+  // Token ต้องเป็นจำนวนเต็มมากกว่า 0 (1 Token = 1 บาท ไม่มีเศษสตางค์)
+  const selectedAmount = Number(amountText);
+  const isValidAmount = Number.isInteger(selectedAmount) && selectedAmount > 0;
 
   /** เปิดหน้าต่าง QR เมื่อจำนวนถูกต้อง */
   function openTopup(amount: number) {
@@ -167,29 +172,33 @@ export default function CustomerWalletPage() {
         <section className="mb-16 flex flex-col gap-4 rounded-3xl bg-base-200 p-7">
           <h2 className="text-2xl font-normal tracking-[-0.02em]">เติม Token</h2>
 
-          {/* ปุ่มจำนวนสำเร็จรูป */}
-          <div className="flex flex-wrap gap-2">
-            {PRESET_AMOUNTS.map((amount) => (
-              <button
-                key={amount}
-                type="button"
-                className="btn bg-base-300 px-5.5 text-[15px] font-normal"
-                onClick={() => openTopup(amount)}
-              >
-                {amount.toLocaleString()} Token
-              </button>
-            ))}
-          </div>
-
-          {/* กรอกจำนวนเอง — กด Enter หรือปุ่ม "เติม" ก็ได้ */}
+          {/* เลือกจำนวนก่อน แล้วกดปุ่มใหญ่ด้านล่าง (กด Enter ในช่องกรอกก็ได้) */}
           <form
-            className="flex flex-wrap items-end gap-2"
+            className="flex flex-col gap-4"
             onSubmit={(event) => {
               event.preventDefault(); // กันไม่ให้หน้า refresh ตอนกด submit
-              openTopup(Number(amountText));
+              openTopup(selectedAmount);
             }}
           >
-            <label className="flex max-w-xs flex-1 flex-col gap-1.5">
+            {/* ปุ่มจำนวนสำเร็จรูป: ปุ่มที่เลือกอยู่เป็นสีดำ (เหมือนปุ่มกรองหมวดหมู่หน้ารายการ Event) */}
+            <div className="flex flex-wrap gap-2" role="group" aria-label="จำนวนที่จะเติม">
+              {PRESET_AMOUNTS.map((amount) => {
+                const isSelected = amount === selectedAmount;
+                return (
+                  <button
+                    key={amount}
+                    type="button"
+                    aria-pressed={isSelected}
+                    className={`btn px-5.5 text-[15px] font-normal ${isSelected ? "btn-neutral" : "bg-base-300"}`}
+                    onClick={() => setAmountText(String(amount))}
+                  >
+                    {amount.toLocaleString()} Token
+                  </button>
+                );
+              })}
+            </div>
+
+            <label className="flex max-w-xs flex-col gap-1.5">
               <span className="text-[13px] text-base-content/60">หรือกรอกจำนวนเอง</span>
               <input
                 className="input w-full border-0 bg-base-300 px-5"
@@ -201,8 +210,12 @@ export default function CustomerWalletPage() {
                 placeholder="เช่น 300"
               />
             </label>
-            <button type="submit" className="btn btn-primary px-8 text-base font-normal">
-              เติม
+
+            {/* ปุ่มใหญ่บอกยอดก่อนจ่าย (แบบเดียวกับปุ่ม "ไปหน้าชำระเงิน" ตอนซื้อบัตร) */}
+            <button type="submit" className="btn btn-primary btn-block h-14 text-base font-normal" disabled={!isValidAmount}>
+              {isValidAmount
+                ? `เติม ${selectedAmount.toLocaleString()} Token · ${selectedAmount.toLocaleString()} บาท`
+                : "เลือกจำนวนที่จะเติม"}
             </button>
           </form>
 
