@@ -21,7 +21,7 @@ component ที่ใช้เฉพาะส่วนลูกค้า — �
 
 - ใช้ class ของ daisyUI (`btn`, `input` …) สีมาจาก theme ใน `app/globals.css` ส่วนขนาดตัวอักษร/ระยะใช้ค่าตามไฟล์ design (Tailwind เช่น `text-[120px]`)
 - ฟอนต์ Inter + IBM Plex Sans Thai ตั้งไว้ใน `CustomerShell`
-- สีประจำงาน (ใบปิด + ปุ่ม) มาจาก `getEventColor()` ใน `Flyer.tsx`
+- สีประจำงาน (ใบปิด + ปุ่ม) มาจาก `getEventColor()` ใน `Flyer.tsx` — เลือกตามหมวดหมู่งาน
 - theme `posh` (พื้นขาว) เป็นค่าเริ่มต้น / หน้าพื้นดำ (รายละเอียดงาน บัตรของฉัน Wallet) กำหนดใน `isDarkPage()` ของ `common/styles.ts` ที่เดียว — `CustomerShell` ใส่ `data-theme="posh-dark"` ให้ทั้งหน้าเอง
 - หัวข้อใหญ่ของหน้าใช้ `PAGE_TITLE` / `PAGE_TITLE_SM` จาก `common/styles.ts`
 - ไม่ใช้ `components/ui` ในหน้าลูกค้า ยกเว้น `Modal` (หน้าต่าง QR)

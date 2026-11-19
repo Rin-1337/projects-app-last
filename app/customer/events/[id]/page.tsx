@@ -119,7 +119,7 @@ function EventDetail() {
             ) : (
               <BuyTicketForm
                 ticketTypes={ticketTypes}
-                accent={getEventColor(event.id).accent}
+                accent={getEventColor(event).accent}
                 onOrderCreated={setOrder}
               />
             )}

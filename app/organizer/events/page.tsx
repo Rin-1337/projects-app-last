@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { Badge, Button, Card, CardTitle, Input, Modal } from "@/components/ui";
+import { CATEGORY_LABEL, CATEGORY_ORDER } from "@/components/customer/common/categories";
 import { saveEvent } from "@/lib/services/events";
-import type { EventItem, EventStatus } from "@/lib/types";
+import type { EventCategory, EventItem, EventStatus } from "@/lib/types";
 import { useStore } from "@/lib/useStore";
 
 const STATUS_LABEL: Record<EventStatus, string> = {
@@ -39,6 +40,8 @@ export default function OrganizerEventsPage() {
   const [description, setDescription] = useState("");
   const [startAt, setStartAt] = useState("");
   const [location, setLocation] = useState("");
+  // หมวดหมู่งาน ("" = ยังไม่ได้เลือก) — บังคับเลือกก่อนบันทึก
+  const [category, setCategory] = useState<EventCategory | "">("");
   const [formError, setFormError] = useState("");
   // ข้อความแดงของตาราง เช่น เปลี่ยนสถานะไม่สำเร็จ (แยกจาก formError ของหน้าต่าง)
   const [error, setError] = useState("");
@@ -49,6 +52,7 @@ export default function OrganizerEventsPage() {
     setDescription("");
     setStartAt("");
     setLocation("");
+    setCategory("");
     setFormError("");
   }
 
@@ -58,6 +62,8 @@ export default function OrganizerEventsPage() {
     setDescription(ev.description);
     setStartAt(toInputValue(ev.startAt));
     setLocation(ev.location);
+    // งานเก่าที่สร้างก่อนมีหมวดหมู่จะเป็นค่าว่าง ต้องเลือกใหม่ก่อนบันทึก
+    setCategory(ev.category ?? "");
     setFormError("");
   }
 
@@ -74,6 +80,10 @@ export default function OrganizerEventsPage() {
       setFormError("กรุณากรอกสถานที่จัดงาน");
       return;
     }
+    if (category === "") {
+      setFormError("กรุณาเลือกหมวดหมู่งาน");
+      return;
+    }
 
     try {
       if (editing === "new") {
@@ -84,6 +94,7 @@ export default function OrganizerEventsPage() {
           description,
           startAt: start.toISOString(),
           location,
+          category,
           organizerId,
           status: "draft",
           createdAt: "",
@@ -96,6 +107,7 @@ export default function OrganizerEventsPage() {
           description,
           startAt: start.toISOString(),
           location,
+          category,
         });
       }
       setEditing(null);
@@ -256,6 +268,26 @@ export default function OrganizerEventsPage() {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           />
+          <div className="flex flex-col gap-1">
+            <label htmlFor="category" className="text-sm text-slate-600">
+              หมวดหมู่งาน
+            </label>
+            <select
+              id="category"
+              className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2"
+              value={category}
+              onChange={(e) => setCategory(e.target.value as EventCategory | "")}
+            >
+              <option value="" disabled>
+                เลือกหมวดหมู่
+              </option>
+              {CATEGORY_ORDER.map((c) => (
+                <option key={c} value={c}>
+                  {CATEGORY_LABEL[c]}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {formError && <p className="text-sm text-red-600">{formError}</p>}
 
