@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Flyer } from "@/components/customer/common/Flyer";
 import { formatEventDate } from "@/components/customer/common/formatEventDate";
 import { TicketCard } from "@/components/customer/tickets/TicketCard";
 import { QRDisplay } from "@/components/shared/QRDisplay";
-import { Badge, Card, CardTitle, Modal, STATUS_TONE } from "@/components/ui";
+import { Modal } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import type { PaymentStatus } from "@/lib/types";
 import { useStore } from "@/lib/useStore";
@@ -16,6 +17,8 @@ import { useStore } from "@/lib/useStore";
 //
 // อ่านจาก useStore ตรง ๆ (ไม่ใช้ listTicketsByCustomer) เพื่อให้หน้าอัปเดตเองทันที
 // เช่น เจ้าหน้าที่สแกนเช็กอินจากอีกแท็บ สถานะบนหน้านี้จะเปลี่ยนเป็น "เช็กอินแล้ว" เอง
+//
+// หน้าตาแบบ Posh: พื้นดำ (theme posh-dark)
 
 /** ข้อความภาษาไทยของสถานะการชำระเงิน */
 const PAYMENT_LABEL: Record<PaymentStatus, string> = {
@@ -23,6 +26,14 @@ const PAYMENT_LABEL: Record<PaymentStatus, string> = {
   paid: "ชำระแล้ว",
   cancelled: "ยกเลิก",
   refunded: "คืนเงินแล้ว",
+};
+
+/** สีป้ายสถานะการชำระเงิน (บนพื้นดำ) */
+const PAYMENT_BADGE: Record<PaymentStatus, string> = {
+  pending: "bg-[#33290A] text-[#FCD34D]",
+  paid: "bg-[#12301F] text-[#6EE7B7]",
+  cancelled: "bg-base-300 text-base-content/80",
+  refunded: "bg-base-300 text-base-content/80",
 };
 
 export default function CustomerTicketsPage() {
@@ -62,73 +73,76 @@ export default function CustomerTicketsPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-slate-900">บัตรของฉัน</h1>
+    <div data-theme="posh-dark" className="min-h-screen bg-base-100 text-base-content">
+      <div className="mx-auto max-w-250 px-5 pt-6 pb-24 sm:px-10">
+        <h1 className="mb-12 text-[56px] leading-none font-normal tracking-[-0.055em] sm:text-[88px] lg:text-[112px]">
+          บัตรของฉัน.
+        </h1>
 
-      {/* ───── บัตรแยกตามงาน ───── */}
-      {myTickets.length === 0 && (
-        <Card className="text-center">
-          <p className="text-slate-600">ยังไม่มีบัตร</p>
-          <Link
-            href="/customer/events"
-            className="mt-2 inline-block text-sm font-medium text-blue-700 hover:underline"
-          >
-            ไปเลือกซื้อบัตร
-          </Link>
-        </Card>
-      )}
-
-      {myEvents.map((event) => (
-        <section key={event.id}>
-          <h2 className="text-lg font-semibold text-slate-900">{event.title}</h2>
-          <p className="text-sm text-slate-600">
-            {formatEventDate(event.startAt)} · {event.location}
-          </p>
-
-          <div className="mt-3 grid gap-3 md:grid-cols-2">
-            {myTickets
-              .filter((ticket) => ticket.eventId === event.id)
-              .map((ticket) => (
-                <TicketCard
-                  key={ticket.id}
-                  ticket={ticket}
-                  ticketTypeName={getTicketTypeName(ticket.ticketTypeId)}
-                  onShowQR={() => setQrTicketId(ticket.id)}
-                />
-              ))}
+        {/* ───── บัตรแยกตามงาน ───── */}
+        {myTickets.length === 0 && (
+          <div className="flex flex-col items-center gap-4 rounded-2xl bg-base-200 p-6 text-center">
+            <p className="text-base-content/60">ยังไม่มีบัตร</p>
+            <Link href="/customer/events" className="btn btn-neutral font-normal">
+              ไปเลือกซื้อบัตร
+            </Link>
           </div>
-        </section>
-      ))}
+        )}
 
-      {/* ───── ประวัติการสั่งซื้อ ───── */}
-      {myOrders.length > 0 && (
-        <Card>
-          <CardTitle>ประวัติการซื้อบัตร</CardTitle>
-
-          <ul className="divide-y divide-slate-100">
-            {myOrders.map((order) => (
-              <li key={order.id} className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
+        <div className="space-y-10">
+          {myEvents.map((event) => (
+            <section key={event.id} className="space-y-3">
+              <div className="flex items-center gap-4">
+                <div className="h-20 w-16 shrink-0 overflow-hidden rounded">
+                  <Flyer event={event} size="xs" />
+                </div>
                 <div>
-                  <p className="font-medium text-slate-900">{getEventTitle(order.eventId)}</p>
-                  <p className="text-slate-500">
-                    บัตร {getTicketTypeName(order.ticketTypeId)} × {order.quantity} ·{" "}
-                    {formatEventDate(order.createdAt)}
+                  <h2 className="text-[26px] font-normal tracking-[-0.02em]">{event.title}</h2>
+                  <p className="text-sm text-base-content/60">
+                    {formatEventDate(event.startAt)} · {event.location}
                   </p>
                 </div>
+              </div>
 
-                <div className="flex items-center gap-3">
-                  <Badge tone={STATUS_TONE[order.paymentStatus]}>
+              {myTickets
+                .filter((ticket) => ticket.eventId === event.id)
+                .map((ticket) => (
+                  <TicketCard
+                    key={ticket.id}
+                    ticket={ticket}
+                    ticketTypeName={getTicketTypeName(ticket.ticketTypeId)}
+                    onShowQR={() => setQrTicketId(ticket.id)}
+                  />
+                ))}
+            </section>
+          ))}
+        </div>
+
+        {/* ───── ประวัติการสั่งซื้อ ───── */}
+        {myOrders.length > 0 && (
+          <section className="mt-16">
+            <h2 className="mb-3 text-[32px] font-normal tracking-[-0.03em]">ประวัติการซื้อบัตร</h2>
+
+            <ul>
+              {myOrders.map((order) => (
+                <li key={order.id} className="flex flex-wrap items-center gap-4 border-b border-base-300 py-4">
+                  <div className="min-w-48 flex-1">
+                    <p>{getEventTitle(order.eventId)}</p>
+                    <p className="text-sm text-base-content/60">
+                      บัตร {getTicketTypeName(order.ticketTypeId)} × {order.quantity} ·{" "}
+                      {formatEventDate(order.createdAt)}
+                    </p>
+                  </div>
+                  <span>{order.total.toLocaleString()} บาท</span>
+                  <span className={`rounded-full px-3 py-1.5 text-[13px] leading-none ${PAYMENT_BADGE[order.paymentStatus]}`}>
                     {PAYMENT_LABEL[order.paymentStatus]}
-                  </Badge>
-                  <span className="font-semibold text-slate-900">
-                    {order.total.toLocaleString()} บาท
                   </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
 
       {/* ───── หน้าต่าง QR สำหรับเช็กอิน ───── */}
       {qrTicket && (

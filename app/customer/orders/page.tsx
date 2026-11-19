@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { MerchPaymentModal } from "@/components/customer/checkout/MerchPaymentModal";
 import { MerchOrderCard } from "@/components/customer/orders/MerchOrderCard";
-import { Card } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import type { MerchOrder } from "@/lib/types";
 import { useStore } from "@/lib/useStore";
@@ -45,24 +44,22 @@ export default function CustomerOrdersPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <h1 className="text-2xl font-bold text-slate-900">ประวัติคำสั่งซื้อ</h1>
+    <div className="mx-auto max-w-275 px-5 pt-6 pb-24 sm:px-10">
+      <h1 className="text-[56px] leading-none font-normal tracking-[-0.055em] sm:text-[88px] lg:text-[112px]">ประวัติรายการ.</h1>
+      <p className="mt-3 mb-10 text-base text-base-content/60">คำสั่งซื้อเสื้อและของที่ระลึก ล่าสุดขึ้นก่อน</p>
 
       {/* ───── ยังไม่เคยสั่งซื้อ ───── */}
       {myOrders.length === 0 && (
-        <Card className="text-center">
-          <p className="text-slate-600">ยังไม่มีคำสั่งซื้อ</p>
-          <Link
-            href="/customer/shop"
-            className="mt-2 inline-block text-sm font-medium text-blue-700 hover:underline"
-          >
+        <div className="flex flex-col items-center gap-4 rounded-3xl bg-base-200 p-8 text-center">
+          <p className="text-base-content/60">ยังไม่มีคำสั่งซื้อ</p>
+          <Link href="/customer/shop" className="btn btn-neutral font-normal">
             ไปเลือกซื้อสินค้า
           </Link>
-        </Card>
+        </div>
       )}
 
       {/* ───── รายการคำสั่งซื้อ ───── */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,420px),1fr))] gap-5">
         {myOrders.map((order) => (
           <MerchOrderCard
             key={order.id}

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Button, Card, CardTitle, Input } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import type { User } from "@/lib/types";
 
@@ -34,25 +33,34 @@ export function ProfileForm({ user }: { user: User }) {
   }
 
   return (
-    <Card>
-      <CardTitle>ข้อมูลส่วนตัว</CardTitle>
+    <div className="rounded-3xl border border-base-300 p-7">
+      <h2 className="mb-4 text-2xl font-normal tracking-[-0.02em]">ข้อมูลส่วนตัว</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input label="อีเมล (ใช้ล็อกอิน แก้ไม่ได้)" value={user.email} disabled />
-        <Input label="ชื่อ-นามสกุล" value={name} onChange={(e) => setName(e.target.value)} />
-        <Input
-          label="เบอร์โทร"
-          inputMode="numeric"
-          placeholder="0812345678"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[13px] text-base-content/70">อีเมล (ใช้ล็อกอิน แก้ไม่ได้)</span>
+          <input className="input w-full border-0 bg-base-200 px-5" value={user.email} disabled />
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[13px] text-base-content/70">ชื่อ-นามสกุล</span>
+          <input className="input w-full border-0 bg-base-200 px-5" value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[13px] text-base-content/70">เบอร์โทร</span>
+          <input
+            className="input w-full border-0 bg-base-200 px-5"
+            inputMode="numeric"
+            placeholder="0812345678"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+        </label>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {success && <p className="text-sm text-green-700">{success}</p>}
+        {error && <p className="text-sm text-error">{error}</p>}
+        {success && <p className="text-sm text-success">{success}</p>}
 
-        <Button type="submit">บันทึก</Button>
+        <button type="submit" className="btn btn-neutral px-7 font-normal">บันทึก</button>
       </form>
-    </Card>
+    </div>
   );
 }

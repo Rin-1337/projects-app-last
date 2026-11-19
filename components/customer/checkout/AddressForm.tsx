@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Button, Card, CardTitle, Input } from "@/components/ui";
 
 /**
  * ฟอร์มที่อยู่จัดส่ง
@@ -60,51 +59,54 @@ export function AddressForm({
   }
 
   return (
-    <Card>
-      <CardTitle>ที่อยู่จัดส่ง</CardTitle>
+    <div className="rounded-3xl border border-base-300 p-7">
+      <h2 className="mb-4 text-2xl font-normal tracking-[-0.02em]">ที่อยู่จัดส่ง</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="ชื่อ-นามสกุลผู้รับ"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <Input
-          label="เบอร์โทร"
-          inputMode="numeric"
-          placeholder="0812345678"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[13px] text-base-content/70">ชื่อ-นามสกุลผู้รับ</span>
+          <input className="input w-full border-0 bg-base-200 px-5" value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
 
-        {/* ใช้ textarea เพราะที่อยู่ยาวหลายบรรทัด (Input ของ components/ui เป็นแค่บรรทัดเดียว) */}
-        <div className="flex flex-col gap-1">
-          <label htmlFor="address" className="text-sm text-slate-600">
-            ที่อยู่ (บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด)
-          </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[13px] text-base-content/70">เบอร์โทร</span>
+          <input
+            className="input w-full border-0 bg-base-200 px-5"
+            inputMode="numeric"
+            placeholder="0812345678"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+        </label>
+
+        {/* ใช้ textarea เพราะที่อยู่ยาวหลายบรรทัด */}
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[13px] text-base-content/70">ที่อยู่ (บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด)</span>
           <textarea
-            id="address"
+            className="textarea w-full rounded-3xl border-0 bg-base-200 px-5"
             rows={3}
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
           />
-        </div>
+        </label>
 
-        <Input
-          label="รหัสไปรษณีย์"
-          inputMode="numeric"
-          maxLength={5}
-          value={postalCode}
-          onChange={(e) => setPostalCode(e.target.value)}
-        />
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[13px] text-base-content/70">รหัสไปรษณีย์</span>
+          <input
+            className="input w-full border-0 bg-base-200 px-5"
+            inputMode="numeric"
+            maxLength={5}
+            value={postalCode}
+            onChange={(e) => setPostalCode(e.target.value)}
+          />
+        </label>
 
-        {errorToShow && <p className="text-sm text-red-600">{errorToShow}</p>}
+        {errorToShow && <p className="text-sm text-error">{errorToShow}</p>}
 
-        <Button type="submit" size="lg" className="w-full">
+        <button type="submit" className="btn btn-primary btn-block h-13 text-base font-normal">
           ยืนยันคำสั่งซื้อและชำระเงิน
-        </Button>
+        </button>
       </form>
-    </Card>
+    </div>
   );
 }

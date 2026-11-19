@@ -39,6 +39,9 @@ export interface Session {
 
 export type EventStatus = "draft" | "published" | "closed";
 
+/** หมวดหมู่งาน (เพิ่มโดยทิวากร — ใช้กรองงานในหน้าลูกค้า) */
+export type EventCategory = "music" | "party" | "food" | "sport" | "tech" | "workshop";
+
 export interface EventItem {
   id: ID;
   title: string;
@@ -46,6 +49,8 @@ export interface EventItem {
   /** วันเวลาเริ่มงาน */
   startAt: string;
   location: string;
+  /** หมวดหมู่งาน — ไม่บังคับ งานที่ยังไม่ได้ตั้งจะแสดงอยู่ใต้ "ทั้งหมด" อย่างเดียว */
+  category?: EventCategory;
   coverImage?: string;
   /** Organizer ที่ Admin มอบหมาย (null = ยังไม่มีผู้รับผิดชอบ) */
   organizerId: ID | null;

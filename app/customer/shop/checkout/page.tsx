@@ -7,7 +7,6 @@ import { MerchPaymentModal } from "@/components/customer/checkout/MerchPaymentMo
 import { OrderSummary } from "@/components/customer/checkout/OrderSummary";
 import { getCartRows } from "@/components/customer/shop/getCartRows";
 import { useCart } from "@/components/customer/shop/useCart";
-import { Card } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import { createOnlineOrder } from "@/lib/services/merch";
 import type { MerchOrder } from "@/lib/types";
@@ -47,21 +46,23 @@ export default function CustomerCheckoutPage() {
   // ───── 4. สั่งซื้อสำเร็จ (เช็กก่อน เพราะตอนนี้ตะกร้าถูกล้างไปแล้ว) ─────
   if (paidOrder) {
     return (
-      <Card className="space-y-3 text-center">
-        <p className="text-lg font-semibold text-green-700">ชำระเงินสำเร็จ</p>
-        <p className="text-sm text-slate-600">
-          เลขคำสั่งซื้อ {paidOrder.id} · ยอด {paidOrder.total.toLocaleString()} บาท
-        </p>
-        <p className="text-sm text-slate-600">ผู้จัดงานกำลังเตรียมสินค้าเพื่อจัดส่ง</p>
-        <div className="flex justify-center gap-4 text-sm font-medium">
-          <Link href="/customer/orders" className="text-blue-700 hover:underline">
-            ดูประวัติคำสั่งซื้อ
-          </Link>
-          <Link href="/customer/shop" className="text-slate-600 hover:underline">
-            ซื้อสินค้าเพิ่ม
-          </Link>
+      <div className="mx-auto max-w-300 px-5 pt-6 pb-24 sm:px-10">
+        <div className="flex flex-col items-center gap-3 rounded-3xl bg-base-200 p-8 text-center">
+          <p className="text-xl text-success">ชำระเงินสำเร็จ</p>
+          <p className="text-sm text-base-content/60">
+            เลขคำสั่งซื้อ {paidOrder.id} · ยอด {paidOrder.total.toLocaleString()} บาท
+          </p>
+          <p className="text-sm text-base-content/60">ผู้จัดงานกำลังเตรียมสินค้าเพื่อจัดส่ง</p>
+          <div className="flex justify-center gap-2 pt-2">
+            <Link href="/customer/orders" className="btn btn-neutral font-normal">
+              ดูประวัติคำสั่งซื้อ
+            </Link>
+            <Link href="/customer/shop" className="btn bg-base-100 font-normal">
+              ซื้อสินค้าเพิ่ม
+            </Link>
+          </div>
         </div>
-      </Card>
+      </div>
     );
   }
 
@@ -70,15 +71,14 @@ export default function CustomerCheckoutPage() {
   // ───── ตะกร้าว่าง ─────
   if (rows.length === 0) {
     return (
-      <Card className="text-center">
-        <p className="text-slate-600">ยังไม่มีสินค้าในตะกร้า</p>
-        <Link
-          href="/customer/shop"
-          className="mt-2 inline-block text-sm font-medium text-blue-700 hover:underline"
-        >
-          ไปเลือกซื้อสินค้า
-        </Link>
-      </Card>
+      <div className="mx-auto max-w-300 px-5 pt-6 pb-24 sm:px-10">
+        <div className="flex flex-col items-center gap-4 rounded-3xl bg-base-200 p-8 text-center">
+          <p className="text-base-content/60">ยังไม่มีสินค้าในตะกร้า</p>
+          <Link href="/customer/shop" className="btn btn-neutral font-normal">
+            ไปเลือกซื้อสินค้า
+          </Link>
+        </div>
+      </div>
     );
   }
 
@@ -133,8 +133,8 @@ export default function CustomerCheckoutPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <h1 className="text-2xl font-bold text-slate-900">สั่งซื้อสินค้า</h1>
+    <div className="mx-auto max-w-300 space-y-10 px-5 pt-6 pb-24 sm:px-10">
+      <h1 className="text-[56px] leading-none font-normal tracking-[-0.055em] sm:text-[88px] lg:text-[112px]">สั่งซื้อสินค้า.</h1>
 
       {/* ───── 1. ที่อยู่ (ซ้าย) + สรุปรายการ (ขวา, บนมือถืออยู่ด้านบน) ───── */}
       <div className="grid gap-5 lg:grid-cols-5">

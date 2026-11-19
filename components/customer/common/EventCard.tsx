@@ -1,61 +1,45 @@
 import Link from "next/link";
-import { Badge, Card } from "@/components/ui";
 import type { EventItem, TicketType } from "@/lib/types";
+import { Flyer } from "./Flyer";
 import { formatEventDate } from "./formatEventDate";
 
-/** บัตร 1 ประเภท: ชื่อ จำนวนคงเหลือ ราคา */
-function TicketRow({ ticketType }: { ticketType: TicketType }) {
-  const remaining = ticketType.quota - ticketType.sold;
-  const isSoldOut = remaining <= 0;
+/**
+ * การ์ดงาน 1 งาน (แบบ Posh): ใบปิดสี่เหลี่ยมจัตุรัส + ชื่องาน วันที่ สถานที่ ราคาเริ่มต้น
+ * บัตรหมดทุกประเภท = มีป้าย "บัตรหมด" ซ้อนมุมขวาบนของใบปิด
+ * (ราคาบัตรแต่ละประเภทดูได้ในหน้ารายละเอียดงาน)
+ */
+export function EventCard({ event, ticketTypes }: { event: EventItem; ticketTypes: TicketType[] }) {
+  // ราคาถูกสุดของบัตรที่ยังเหลือ
+  const available = ticketTypes.filter((ticketType) => ticketType.quota - ticketType.sold > 0);
+  const isSoldOut = ticketTypes.length > 0 && available.length === 0;
+
+  let priceLabel = "ยังไม่เปิดจำหน่ายบัตร";
+  if (available.length > 0) {
+    const lowest = Math.min(...available.map((ticketType) => ticketType.price));
+    priceLabel = `เริ่ม ${lowest.toLocaleString()} บาท`;
+  } else if (isSoldOut) {
+    priceLabel = "บัตรหมด";
+  }
 
   return (
-    <li className="flex items-center justify-between gap-3 py-2 text-sm">
-      <span className="font-medium text-slate-800">{ticketType.name}</span>
-
-      <span className="flex items-center gap-3">
-        {isSoldOut ? (
-          <Badge tone="red">บัตรหมด</Badge>
-        ) : (
-          <span className="text-slate-500">เหลือ {remaining.toLocaleString()} ใบ</span>
+    <Link href={`/customer/events/${event.id}`} className="group flex flex-col gap-3.5">
+      <div className="relative aspect-square overflow-hidden rounded-md">
+        <div className="h-full w-full transition-transform duration-300 group-hover:scale-[1.03]">
+          <Flyer event={event} size="lg" />
+        </div>
+        {isSoldOut && (
+          <span className="absolute top-3.5 right-3.5 rounded-full bg-white px-3 py-1.5 text-[13px] font-medium text-[#B42318]">
+            บัตรหมด
+          </span>
         )}
-        <span className="font-semibold text-slate-900">
-          {ticketType.price.toLocaleString()} บาท
-        </span>
-      </span>
-    </li>
-  );
-}
+      </div>
 
-/** การ์ดงาน 1 งาน พร้อมรายการบัตร */
-export function EventCard({
-  event,
-  ticketTypes,
-}: {
-  event: EventItem;
-  ticketTypes: TicketType[];
-}) {
-  return (
-    <Card className="flex h-full flex-col">
-      <h3 className="text-lg font-semibold text-slate-900">{event.title}</h3>
-      <p className="mt-1 text-sm text-slate-600">{formatEventDate(event.startAt)}</p>
-      <p className="text-sm text-slate-600">{event.location}</p>
-
-      <ul className="mt-4 flex-1 divide-y divide-slate-100 border-y border-slate-100">
-        {ticketTypes.map((ticketType) => (
-          <TicketRow key={ticketType.id} ticketType={ticketType} />
-        ))}
-
-        {ticketTypes.length === 0 && (
-          <li className="py-2 text-sm text-slate-500">ยังไม่เปิดจำหน่ายบัตร</li>
-        )}
-      </ul>
-
-      <Link
-        href={`/customer/events/${event.id}`}
-        className="mt-4 text-sm font-medium text-blue-700 hover:underline"
-      >
-        ดูรายละเอียด
-      </Link>
-    </Card>
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[17px] font-medium">{event.title}</span>
+        <span className="text-sm text-base-content/60">{formatEventDate(event.startAt)}</span>
+        <span className="text-sm text-base-content/60">{event.location}</span>
+        <span className="mt-1.5 text-sm">{priceLabel}</span>
+      </div>
+    </Link>
   );
 }

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Card, CardTitle } from "@/components/ui";
 import { getSizeLabel, getTotalPrice, type CartRow } from "@/components/customer/shop/getCartRows";
 
 /**
@@ -10,34 +9,32 @@ export function OrderSummary({ eventTitle, rows }: { eventTitle: string; rows: C
   const totalPrice = getTotalPrice(rows);
 
   return (
-    <Card>
-      <CardTitle>สรุปรายการ</CardTitle>
-      <p className="-mt-2 mb-3 text-sm text-slate-500">{eventTitle}</p>
+    <div className="rounded-3xl bg-base-200 p-6">
+      <h2 className="text-2xl font-normal tracking-[-0.02em]">สรุปรายการ</h2>
+      <p className="mb-3 text-sm text-base-content/60">{eventTitle}</p>
 
-      <ul className="divide-y divide-slate-100">
+      <ul className="divide-y divide-[#E5E5E5]">
         {rows.map((row) => (
           <li key={row.productId + row.size} className="flex justify-between gap-3 py-2 text-sm">
             <div>
-              <p className="font-medium text-slate-900">{row.name}</p>
-              <p className="text-slate-500">
+              <p className="font-medium">{row.name}</p>
+              <p className="text-base-content/60">
                 {getSizeLabel(row.size)} · {row.unitPrice.toLocaleString()} × {row.quantity}
               </p>
             </div>
-            <span className="font-semibold text-slate-900">
-              {row.lineTotal.toLocaleString()} บาท
-            </span>
+            <span>{row.lineTotal.toLocaleString()} บาท</span>
           </li>
         ))}
       </ul>
 
-      <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-4">
-        <span className="text-sm text-slate-600">ยอดที่ต้องชำระ</span>
-        <span className="text-xl font-bold text-slate-900">{totalPrice.toLocaleString()} บาท</span>
+      <div className="mt-2 flex items-baseline justify-between pt-3">
+        <span className="text-sm text-base-content/60">ยอดที่ต้องชำระ</span>
+        <span className="text-[28px] tracking-[-0.03em]">{totalPrice.toLocaleString()} บาท</span>
       </div>
 
-      <Link href="/customer/shop" className="mt-3 inline-block text-sm text-blue-700 hover:underline">
+      <Link href="/customer/shop" className="mt-3 inline-block text-sm text-base-content/60 hover:text-base-content">
         ← กลับไปแก้ไขตะกร้า
       </Link>
-    </Card>
+    </div>
   );
 }

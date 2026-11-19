@@ -1,6 +1,5 @@
 import { formatEventDate } from "@/components/customer/common/formatEventDate";
 import { getSizeLabel } from "@/components/customer/shop/getCartRows";
-import { Badge, Button, Card } from "@/components/ui";
 import type { MerchOrder, MerchProduct, ShippingStatus } from "@/lib/types";
 
 /** ข้อความภาษาไทยของสถานะการจัดส่ง */
@@ -13,12 +12,12 @@ const SHIPPING_LABEL: Record<ShippingStatus, string> = {
 };
 
 /** สีป้ายของสถานะการจัดส่ง */
-const SHIPPING_TONE: Record<ShippingStatus, "gray" | "blue" | "green" | "yellow" | "red"> = {
-  pending: "yellow",
-  preparing: "blue",
-  shipped: "blue",
-  delivered: "green",
-  cancelled: "gray",
+const SHIPPING_BADGE: Record<ShippingStatus, string> = {
+  pending: "bg-[#FFF1C7] text-[#7A5200]",
+  preparing: "bg-white text-base-content",
+  shipped: "bg-[#E3EEFB] text-[#1D5FA8]",
+  delivered: "bg-[#DCF5E7] text-[#0B6B44]",
+  cancelled: "bg-white text-base-content/60",
 };
 
 /**
@@ -56,59 +55,55 @@ export function MerchOrderCard({
   }
 
   return (
-    <Card className="space-y-3">
+    <div className="flex flex-col gap-3.5 rounded-3xl bg-base-200 p-6">
       {/* ───── หัวการ์ด: ชื่องาน + สถานะ ───── */}
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="font-semibold text-slate-900">{eventTitle}</p>
-          <p className="text-sm text-slate-500">
+          <p className="text-xl tracking-[-0.01em]">{eventTitle}</p>
+          <p className="text-[13px] text-base-content/60">
             เลขที่ {order.id} · {formatEventDate(order.createdAt)}
           </p>
         </div>
-        <Badge tone={SHIPPING_TONE[shippingStatus]}>{SHIPPING_LABEL[shippingStatus]}</Badge>
+        <span className={`rounded-full px-3 py-1.5 text-[13px] leading-none ${SHIPPING_BADGE[shippingStatus]}`}>{SHIPPING_LABEL[shippingStatus]}</span>
       </div>
 
       {/* ───── รายการสินค้า ───── */}
-      <ul className="divide-y divide-slate-100 border-y border-slate-100">
+      <ul className="flex flex-col gap-1.5">
         {order.items.map((item) => (
-          <li key={item.productId + item.size} className="flex justify-between gap-3 py-2 text-sm">
+          <li key={item.productId + item.size} className="flex justify-between gap-3 text-[15px]">
             <div>
-              <p className="text-slate-900">{getProductName(item.productId)}</p>
-              <p className="text-slate-500">
+              <p>{getProductName(item.productId)}</p>
+              <p className="text-base-content/60">
                 {getSizeLabel(item.size)} · {item.unitPrice.toLocaleString()} × {item.quantity}
               </p>
             </div>
-            <span className="text-slate-900">
-              {(item.unitPrice * item.quantity).toLocaleString()} บาท
-            </span>
+            <span>{(item.unitPrice * item.quantity).toLocaleString()} บาท</span>
           </li>
         ))}
       </ul>
 
       {/* ───── ยอดรวม ───── */}
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-slate-600">ยอดรวม</span>
-        <span className="text-lg font-bold text-slate-900">{order.total.toLocaleString()} บาท</span>
+      <div className="flex items-baseline justify-between border-t border-[#E5E5E5] pt-3">
+        <span className="text-sm text-base-content/60">ยอดรวม</span>
+        <span className="text-[26px] tracking-[-0.02em]">{order.total.toLocaleString()} บาท</span>
       </div>
 
       {/* ───── ข้อมูลจัดส่ง ───── */}
       {order.trackingNo && (
-        <p className="text-sm text-slate-700">
-          เลขพัสดุ: <span className="font-mono font-semibold">{order.trackingNo}</span>
+        <p className="text-sm">
+          เลขพัสดุ: <span className="font-mono">{order.trackingNo}</span>
         </p>
       )}
       {order.shippingAddress && (
-        <p className="whitespace-pre-line text-sm text-slate-500">
-          ที่อยู่จัดส่ง: {order.shippingAddress}
-        </p>
+        <p className="text-sm whitespace-pre-line text-base-content/60">ที่อยู่จัดส่ง: {order.shippingAddress}</p>
       )}
 
       {/* ───── ปุ่มชำระเงิน (เฉพาะที่ยังไม่จ่าย) ───── */}
       {isWaitingPayment && (
-        <Button onClick={onPay} className="w-full">
+        <button type="button" onClick={onPay} className="btn btn-primary btn-block text-[15px] font-normal">
           ชำระเงิน
-        </Button>
+        </button>
       )}
-    </Card>
+    </div>
   );
 }
