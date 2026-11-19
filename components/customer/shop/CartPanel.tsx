@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Button, Card, CardTitle } from "@/components/ui";
 import { getSizeLabel, getTotalPrice, getTotalQuantity, type CartRow } from "./getCartRows";
 
 /**
@@ -20,27 +19,27 @@ export function CartPanel({
   const totalPrice = getTotalPrice(rows);
 
   return (
-    <Card>
-      <CardTitle>ตะกร้าสินค้า ({totalQuantity} ชิ้น)</CardTitle>
+    <div className="flex flex-col gap-3.5 rounded-3xl bg-base-200 p-6">
+      <h2 className="text-2xl font-normal tracking-[-0.02em]">ตะกร้า · {totalQuantity} ชิ้น</h2>
 
-      {rows.length === 0 && <p className="text-sm text-slate-500">ยังไม่มีสินค้าในตะกร้า</p>}
+      {rows.length === 0 && <p className="text-sm text-base-content/60">ยังไม่มีสินค้าในตะกร้า</p>}
 
       {rows.length > 0 && (
         <>
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-[#E5E5E5]">
             {rows.map((row) => (
               <li key={row.productId + row.size} className="space-y-2 py-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-sm font-medium text-slate-900">{row.name}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-[15px]">{row.name}</p>
+                    <p className="text-[13px] text-base-content/60">
                       {getSizeLabel(row.size)} · {row.unitPrice.toLocaleString()} บาท/ชิ้น
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => onRemove(row.productId, row.size)}
-                    className="text-xs text-red-600 hover:underline"
+                    className="btn btn-ghost btn-xs text-error"
                   >
                     ลบ
                   </button>
@@ -48,46 +47,41 @@ export function CartPanel({
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
+                    <button
+                      type="button"
+                      aria-label="ลดจำนวน"
+                      className="btn btn-circle h-9 w-9 bg-base-100 font-normal"
                       onClick={() => onChangeQuantity(row.productId, row.size, -1)}
                     >
                       −
-                    </Button>
-                    <span className="w-6 text-center text-sm font-semibold">{row.quantity}</span>
-                    <Button
-                      variant="secondary"
-                      size="sm"
+                    </button>
+                    <span className="w-6 text-center text-[15px]">{row.quantity}</span>
+                    <button
+                      type="button"
+                      aria-label="เพิ่มจำนวน"
+                      className="btn btn-circle h-9 w-9 bg-base-100 font-normal"
                       onClick={() => onChangeQuantity(row.productId, row.size, 1)}
                       disabled={row.quantity >= row.stock}
                     >
                       +
-                    </Button>
+                    </button>
                   </div>
-                  <span className="text-sm font-semibold text-slate-900">
-                    {row.lineTotal.toLocaleString()} บาท
-                  </span>
+                  <span className="text-[15px]">{row.lineTotal.toLocaleString()} บาท</span>
                 </div>
               </li>
             ))}
           </ul>
 
-          <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-4">
-            <span className="text-sm text-slate-600">ราคารวม</span>
-            <span className="text-xl font-bold text-slate-900">
-              {totalPrice.toLocaleString()} บาท
-            </span>
+          <div className="flex items-baseline justify-between pt-1">
+            <span className="text-sm text-base-content/60">ราคารวม</span>
+            <span className="text-[32px] tracking-[-0.03em]">{totalPrice.toLocaleString()} บาท</span>
           </div>
 
-          <Link
-            href="/customer/shop/checkout"
-            className="mt-4 block rounded-lg bg-blue-600 px-5 py-2.5 text-center font-medium text-white hover:bg-blue-700"
-          >
+          <Link href="/customer/shop/checkout" className="btn btn-primary h-13 text-[15px] font-normal">
             สั่งซื้อ
           </Link>
         </>
       )}
-    </Card>
+    </div>
   );
 }

@@ -1,9 +1,10 @@
 "use client";
 
+import { QRCodeSVG } from "qrcode.react";
 import { useState } from "react";
 import { formatEventDate } from "@/components/customer/common/formatEventDate";
 import { QRDisplay } from "@/components/shared/QRDisplay";
-import { Button, Card, CardTitle, Input, Modal } from "@/components/ui";
+import { Button, Modal } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import { topupOnline } from "@/lib/services/wallet";
 import type { TokenTransaction } from "@/lib/types";
@@ -20,6 +21,8 @@ import { useStore } from "@/lib/useStore";
 // ทำไมใช้ useStore แทน getBalance() / listTransactions()
 //   useStore จะทำให้หน้าอัปเดตเองเมื่อข้อมูลเปลี่ยน
 //   เช่น ร้านค้าสแกนหัก Token จากอีกแท็บ ยอดบนหน้านี้จะลดลงทันทีโดยไม่ต้องกด refresh
+//
+// หน้าตาแบบ Posh: พื้นดำ (theme posh-dark) ยอด Token ตัวใหญ่ + การ์ด QR รหัสสมาชิก
 
 /** ปุ่มจำนวนเติมสำเร็จรูป */
 const PRESET_AMOUNTS = [100, 200, 500, 1000];
@@ -130,58 +133,66 @@ export default function CustomerWalletPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900">Token Wallet</h1>
-
-      <div className="grid gap-6 md:grid-cols-2">
+    <div data-theme="posh-dark" className="min-h-screen bg-base-100 text-base-content">
+      <div className="mx-auto max-w-275 px-5 pt-6 pb-24 sm:px-10">
         {/* ───── ส่วนที่ 1 + 2: ยอดคงเหลือ และ QR จ่ายร้านค้า ───── */}
-        <Card className="flex flex-col items-center text-center">
-          <p className="text-sm text-slate-500">ยอด Token คงเหลือ</p>
-          <p className="mt-1 text-4xl font-bold text-slate-900">{balance.toLocaleString()}</p>
-          <p className="text-sm text-slate-500">Token (1 Token = 1 บาท)</p>
-
-          <div className="mt-6 w-full border-t border-slate-100 pt-6">
-            {/* มี Customer ID → แสดง QR (QRDisplay จะแสดงรหัสเป็นตัวหนังสือใต้ QR ให้ด้วย) */}
-            {user.customerCode && (
-              <QRDisplay
-                value={user.customerCode}
-                label="ให้ร้านค้าสแกน QR นี้เพื่อชำระด้วย Token"
-              />
-            )}
-
-            {/* ไม่มี Customer ID → แจ้งให้ติดต่อเจ้าหน้าที่ */}
-            {!user.customerCode && (
-              <p className="text-sm text-red-600">
-                บัญชีนี้ยังไม่มี Customer ID กรุณาติดต่อเจ้าหน้าที่
-              </p>
-            )}
+        <div className="mb-14 flex flex-wrap items-end justify-between gap-8">
+          <div>
+            <h1 className="mb-2 text-[15px] font-normal text-base-content/60">ยอด Token คงเหลือ</h1>
+            <p className="text-[96px] leading-[0.9] font-normal tracking-[-0.06em] sm:text-[168px]">
+              {balance.toLocaleString()}
+            </p>
+            <p className="mt-3 text-[15px] text-base-content/60">Token · 1 Token = 1 บาท</p>
           </div>
-        </Card>
+
+          {/* QR ของลูกค้า ให้ร้านค้าสแกนเพื่อหัก Token */}
+          {user.customerCode && (
+            <div className="flex items-center gap-4.5 rounded-[20px] bg-base-200 p-4.5">
+              <div className="flex h-30 w-30 items-center justify-center rounded-xl bg-white">
+                <QRCodeSVG value={user.customerCode} size={96} marginSize={0} />
+              </div>
+              <div className="max-w-50">
+                <p className="text-[13px] text-base-content/60">รหัสสมาชิก</p>
+                <p className="text-[28px] tracking-[-0.02em]">{user.customerCode}</p>
+                <p className="mt-1 text-[13px] text-base-content/60">ให้ร้านค้าสแกน QR นี้เพื่อชำระด้วย Token</p>
+              </div>
+            </div>
+          )}
+          {!user.customerCode && (
+            <p className="max-w-56 text-sm text-error">บัญชีนี้ยังไม่มี Customer ID กรุณาติดต่อเจ้าหน้าที่</p>
+          )}
+        </div>
 
         {/* ───── ส่วนที่ 3: เติม Token ───── */}
-        <Card>
-          <CardTitle>เติม Token</CardTitle>
+        <section className="mb-16 flex flex-col gap-4 rounded-3xl bg-base-200 p-7">
+          <h2 className="text-2xl font-normal tracking-[-0.02em]">เติม Token</h2>
 
           {/* ปุ่มจำนวนสำเร็จรูป */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-wrap gap-2">
             {PRESET_AMOUNTS.map((amount) => (
-              <Button key={amount} variant="secondary" onClick={() => openTopup(amount)}>
+              <button
+                key={amount}
+                type="button"
+                className="btn bg-base-300 px-5.5 text-[15px] font-normal"
+                onClick={() => openTopup(amount)}
+              >
                 {amount.toLocaleString()} Token
-              </Button>
+              </button>
             ))}
           </div>
 
           {/* กรอกจำนวนเอง — กด Enter หรือปุ่ม "เติม" ก็ได้ */}
           <form
-            className="mt-4 flex items-end gap-2"
+            className="flex flex-wrap items-end gap-2"
             onSubmit={(event) => {
               event.preventDefault(); // กันไม่ให้หน้า refresh ตอนกด submit
               openTopup(Number(amountText));
             }}
           >
-            <div className="flex-1">
-              <Input
-                label="หรือกรอกจำนวนเอง"
+            <label className="flex max-w-xs flex-1 flex-col gap-1.5">
+              <span className="text-[13px] text-base-content/60">หรือกรอกจำนวนเอง</span>
+              <input
+                className="input w-full border-0 bg-base-300 px-5"
                 type="number"
                 min={1}
                 step={1}
@@ -189,39 +200,39 @@ export default function CustomerWalletPage() {
                 onChange={(event) => setAmountText(event.target.value)}
                 placeholder="เช่น 300"
               />
-            </div>
-            <Button type="submit">เติม</Button>
+            </label>
+            <button type="submit" className="btn btn-primary px-8 text-base font-normal">
+              เติม
+            </button>
           </form>
 
-          {errorMessage && <p className="mt-2 text-sm text-red-600">{errorMessage}</p>}
-          {successMessage && <p className="mt-2 text-sm text-green-700">{successMessage}</p>}
+          {errorMessage && <p className="text-sm text-error">{errorMessage}</p>}
+          {successMessage && <p className="text-sm text-success">{successMessage}</p>}
 
-          <p className="mt-4 text-xs text-slate-500">
+          <p className="text-[13px] text-base-content/60">
             เติมที่หน้างานได้ด้วย โดยแจ้ง Customer ID กับเจ้าหน้าที่ (เงินสดหรือ QR)
           </p>
-        </Card>
+        </section>
+
+        {/* ───── ส่วนที่ 4: ประวัติ ───── */}
+        <section>
+          <h2 className="mb-3 text-[32px] font-normal tracking-[-0.03em]">ประวัติการเติมและใช้ Token</h2>
+
+          {myTransactions.length === 0 && <p className="text-base-content/60">ยังไม่มีรายการ</p>}
+
+          <ul>
+            {myTransactions.map((tx) => (
+              <TransactionRow
+                key={tx.id}
+                title={getTransactionTitle(tx)}
+                date={formatEventDate(tx.createdAt)}
+                amount={tx.amount}
+                isIncoming={tx.toUserId === userId}
+              />
+            ))}
+          </ul>
+        </section>
       </div>
-
-      {/* ───── ส่วนที่ 4: ประวัติ ───── */}
-      <Card>
-        <CardTitle>ประวัติการเติมและใช้ Token</CardTitle>
-
-        {myTransactions.length === 0 && (
-          <p className="text-sm text-slate-500">ยังไม่มีรายการ</p>
-        )}
-
-        <ul className="divide-y divide-slate-100">
-          {myTransactions.map((tx) => (
-            <TransactionRow
-              key={tx.id}
-              title={getTransactionTitle(tx)}
-              date={formatEventDate(tx.createdAt)}
-              amount={tx.amount}
-              isIncoming={tx.toUserId === userId}
-            />
-          ))}
-        </ul>
-      </Card>
 
       {/* ───── หน้าต่าง QR เติม Token (เปิดเมื่อ topupAmount มากกว่า 0) ───── */}
       {topupAmount > 0 && (
@@ -255,7 +266,7 @@ export default function CustomerWalletPage() {
 /**
  * แถวประวัติ 1 รายการ
  * isIncoming = true  → Token เข้า (เติม)   แสดง + สีเขียว
- * isIncoming = false → Token ออก (จ่ายร้าน) แสดง − สีแดง
+ * isIncoming = false → Token ออก (จ่ายร้าน) แสดง − สีปกติ
  */
 function TransactionRow({
   title,
@@ -269,21 +280,21 @@ function TransactionRow({
   isIncoming: boolean;
 }) {
   let sign = "−";
-  let colorClass = "text-red-600";
+  let colorClass = "";
   if (isIncoming) {
     sign = "+";
-    colorClass = "text-green-700";
+    colorClass = "text-success";
   }
 
   return (
-    <li className="flex items-center justify-between gap-2 py-3 text-sm">
+    <li className="flex items-center justify-between gap-4 border-b border-base-300 py-4.5">
       <div>
-        <p className="font-medium text-slate-900">{title}</p>
-        <p className="text-slate-500">{date}</p>
+        <p className="text-base">{title}</p>
+        <p className="text-[13px] text-base-content/60">{date}</p>
       </div>
-      <span className={"font-semibold " + colorClass}>
+      <span className={"text-lg tabular-nums " + colorClass}>
         {sign}
-        {amount.toLocaleString()} Token
+        {amount.toLocaleString()}
       </span>
     </li>
   );

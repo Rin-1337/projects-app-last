@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Button, Card, CardTitle, Input } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 
 /** ฟอร์มเปลี่ยนรหัสผ่าน: กรอกรหัสเดิม + รหัสใหม่ 2 ครั้ง */
@@ -39,34 +38,43 @@ export function PasswordForm({ userId }: { userId: string }) {
   }
 
   return (
-    <Card>
-      <CardTitle>เปลี่ยนรหัสผ่าน</CardTitle>
+    <div className="rounded-3xl border border-base-300 p-7">
+      <h2 className="mb-4 text-2xl font-normal tracking-[-0.02em]">เปลี่ยนรหัสผ่าน</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="รหัสผ่านเดิม"
-          type="password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-        />
-        <Input
-          label="รหัสผ่านใหม่ (อย่างน้อย 4 ตัว)"
-          type="password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-        />
-        <Input
-          label="ยืนยันรหัสผ่านใหม่"
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-        />
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[13px] text-base-content/70">รหัสผ่านเดิม</span>
+          <input
+            className="input w-full border-0 bg-base-200 px-5"
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+          />
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[13px] text-base-content/70">รหัสผ่านใหม่ (อย่างน้อย 4 ตัว)</span>
+          <input
+            className="input w-full border-0 bg-base-200 px-5"
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[13px] text-base-content/70">ยืนยันรหัสผ่านใหม่</span>
+          <input
+            className="input w-full border-0 bg-base-200 px-5"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
+        </label>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {success && <p className="text-sm text-green-700">{success}</p>}
+        {error && <p className="text-sm text-error">{error}</p>}
+        {success && <p className="text-sm text-success">{success}</p>}
 
-        <Button type="submit">เปลี่ยนรหัสผ่าน</Button>
+        <button type="submit" className="btn bg-base-200 px-7 font-normal">เปลี่ยนรหัสผ่าน</button>
       </form>
-    </Card>
+    </div>
   );
 }

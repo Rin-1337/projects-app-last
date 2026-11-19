@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth";
 // หน้าโปรไฟล์ — ผู้รับผิดชอบ: ทิวากร
 //   ซ้าย: แก้ชื่อ / เบอร์โทร (ProfileForm)
 //   ขวา: เปลี่ยนรหัสผ่าน (PasswordForm)
-// ปุ่มออกจากระบบอยู่ใน UserMenu มุมบนอยู่แล้ว หน้านี้จึงไม่ต้องมี
+// ปุ่มออกจากระบบอยู่ใน CustomerShell มุมบนขวาอยู่แล้ว หน้านี้จึงไม่ต้องมี
 
 export default function CustomerProfilePage() {
   const { user } = useAuth();
@@ -17,10 +17,25 @@ export default function CustomerProfilePage() {
   }
 
   return (
-    <div className="space-y-5">
-      <h1 className="text-2xl font-bold text-slate-900">โปรไฟล์</h1>
+    <div className="mx-auto max-w-275 space-y-12 px-5 pt-6 pb-24 sm:px-10">
+      <h1 className="text-[56px] leading-none font-normal tracking-[-0.055em] sm:text-[88px] lg:text-[120px]">โปรไฟล์.</h1>
 
-      <div className="grid gap-5 md:grid-cols-2">
+      {/* ชื่อ + รหัสสมาชิก */}
+      <div className="flex flex-wrap items-center gap-5">
+        <div className="avatar avatar-placeholder">
+          <div className="w-22 rounded-full bg-neutral text-neutral-content">
+            <span className="text-4xl">{user.name.charAt(0)}</span>
+          </div>
+        </div>
+        <div>
+          <p className="text-[28px] tracking-[-0.02em]">{user.name}</p>
+          <p className="text-[15px] text-base-content/60">
+            ผู้เข้าร่วมงาน{user.customerCode && ` · รหัสสมาชิก ${user.customerCode}`}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-5">
         <ProfileForm user={user} />
         <PasswordForm userId={user.id} />
       </div>

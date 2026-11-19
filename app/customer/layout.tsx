@@ -1,16 +1,15 @@
+import { CustomerShell } from "@/components/customer/common/CustomerShell";
 import { CUSTOMER_NAV } from "@/components/customer/common/nav";
 import { RoleGuard } from "@/components/shared/RoleGuard";
-import { RoleShell } from "@/components/shared/RoleShell";
 
 // ผู้รับผิดชอบ: ทิวากร
+// ฝั่งลูกค้าใช้ CustomerShell (หน้าตาแบบ Posh) แทน RoleShell — Role อื่นยังใช้ RoleShell เหมือนเดิม
 export const instant = false;
 
 export default function CustomerLayout({ children }: LayoutProps<"/customer">) {
   return (
     <RoleGuard role="customer">
-      <RoleShell roleLabel="ผู้เข้าร่วมงาน" nav={CUSTOMER_NAV}>
-        {children}
-      </RoleShell>
+      <CustomerShell nav={CUSTOMER_NAV}>{children}</CustomerShell>
     </RoleGuard>
   );
 }

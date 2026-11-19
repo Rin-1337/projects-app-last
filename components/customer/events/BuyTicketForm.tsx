@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Badge, Button, Card, CardTitle, Input } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import { createTicketOrder } from "@/lib/services/tickets";
 import type { TicketOrder, TicketType } from "@/lib/types";
@@ -14,12 +13,16 @@ const MAX_PER_ORDER = 10;
  * กดยืนยันแล้วจะสร้างคำสั่งซื้อ (ยังไม่จ่าย) แล้วส่งกลับไปให้หน้าแม่เปิดหน้าชำระเงิน
  *
  * จำนวนบัตร = จำนวนช่องชื่อ (attendeeNames.length) ไม่ต้องเก็บแยกอีกตัว
+ * ใช้บนหน้าพื้นดำ (theme posh-dark)
  */
 export function BuyTicketForm({
   ticketTypes,
+  accent,
   onOrderCreated,
 }: {
   ticketTypes: TicketType[];
+  /** สีประจำงาน ใช้กับขอบบัตรที่เลือกและปุ่มชำระเงิน */
+  accent: string;
   onOrderCreated: (order: TicketOrder) => void;
 }) {
   const { user } = useAuth();
@@ -38,11 +41,7 @@ export function BuyTicketForm({
   const total = selected ? selected.price * quantity : 0;
 
   if (ticketTypes.length === 0) {
-    return (
-      <Card>
-        <p className="text-sm text-slate-600">งานนี้ยังไม่เปิดจำหน่ายบัตร</p>
-      </Card>
-    );
+    return <p className="rounded-2xl bg-base-200 p-6 text-base-content/60">งานนี้ยังไม่เปิดจำหน่ายบัตร</p>;
   }
 
   function selectTicketType(ticketType: TicketType) {
@@ -94,100 +93,109 @@ export function BuyTicketForm({
     }
   }
 
+  /** หัวข้อของแต่ละขั้น */
+  const STEP_TITLE = "mb-1 text-[15px] font-medium text-base-content/60";
+  /** ปุ่ม +/− วงกลม */
+  const ROUND_BUTTON = "btn btn-circle h-11 w-11 bg-base-300 text-xl font-normal";
+
   return (
-    <Card>
-      <CardTitle>ซื้อบัตร</CardTitle>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      {/* 1. เลือกประเภทบัตร */}
+      <fieldset className="flex flex-col gap-2">
+        <legend className={STEP_TITLE}>1. เลือกประเภทบัตร</legend>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* 1. เลือกประเภทบัตร */}
-        <fieldset className="space-y-2">
-          <legend className="mb-2 text-sm font-medium text-slate-700">ประเภทบัตร</legend>
+        {ticketTypes.map((ticketType) => {
+          const left = ticketType.quota - ticketType.sold;
+          const isSoldOut = left <= 0;
+          const isSelected = selectedId === ticketType.id;
 
-          {ticketTypes.map((ticketType) => {
-            const left = ticketType.quota - ticketType.sold;
-            const isSoldOut = left <= 0;
-
-            return (
-              <label
-                key={ticketType.id}
-                className={`flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm ${
-                  selectedId === ticketType.id ? "border-blue-600 bg-blue-50" : "border-slate-200"
-                } ${isSoldOut ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
-              >
-                <span className="flex items-center gap-3">
-                  <input
-                    type="radio"
-                    name="ticketType"
-                    checked={selectedId === ticketType.id}
-                    disabled={isSoldOut}
-                    onChange={() => selectTicketType(ticketType)}
-                  />
-                  <span className="font-medium text-slate-800">{ticketType.name}</span>
+          return (
+            <label
+              key={ticketType.id}
+              className={`flex min-h-16 items-center justify-between gap-3 rounded-[14px] border-2 px-4.5 py-3 ${
+                isSoldOut ? "cursor-not-allowed border-[#1F1F1F] bg-[#121212] opacity-50" : "cursor-pointer border-transparent bg-base-200"
+              }`}
+              style={isSelected ? { borderColor: accent } : undefined}
+            >
+              {/* radio ซ่อนไว้ แต่ยังกดด้วยคีย์บอร์ดได้ */}
+              <input
+                type="radio"
+                name="ticketType"
+                className="sr-only"
+                checked={isSelected}
+                disabled={isSoldOut}
+                onChange={() => selectTicketType(ticketType)}
+              />
+              <span className="flex flex-col gap-0.5">
+                <span className="text-base font-medium">{ticketType.name}</span>
+                <span className="text-[13px] text-base-content/60">
+                  {isSoldOut ? "บัตรหมด" : `เหลือ ${left.toLocaleString()} ใบ`}
                 </span>
+              </span>
+              <span className="text-base">{ticketType.price.toLocaleString()} บาท</span>
+            </label>
+          );
+        })}
+      </fieldset>
 
-                <span className="flex items-center gap-3">
-                  {isSoldOut ? (
-                    <Badge tone="red">บัตรหมด</Badge>
-                  ) : (
-                    <span className="text-slate-500">เหลือ {left.toLocaleString()} ใบ</span>
-                  )}
-                  <span className="font-semibold text-slate-900">
-                    {ticketType.price.toLocaleString()} บาท
-                  </span>
-                </span>
-              </label>
-            );
-          })}
-        </fieldset>
-
-        {/* บัตรหมดทุกประเภท ไม่ต้องแสดงส่วนที่เหลือ */}
-        {selected && (
-          <>
-            {/* 2. จำนวนบัตร */}
-            <div>
-              <p className="mb-2 text-sm font-medium text-slate-700">จำนวนบัตร</p>
-              <div className="flex items-center gap-3">
-                <Button variant="secondary" onClick={removeTicket} disabled={quantity <= 1}>
+      {/* บัตรหมดทุกประเภท ไม่ต้องแสดงส่วนที่เหลือ */}
+      {selected && (
+        <>
+          {/* 2. จำนวนบัตร */}
+          <div>
+            <p className={STEP_TITLE}>2. จำนวนบัตร</p>
+            <div className="flex items-center justify-between rounded-[14px] bg-base-200 px-4.5 py-3.5">
+              <span className="text-base">{selected.name}</span>
+              <div className="flex items-center gap-2.5">
+                <button type="button" aria-label="ลดจำนวนบัตร" className={ROUND_BUTTON} onClick={removeTicket} disabled={quantity <= 1}>
                   −
-                </Button>
-                <span className="w-8 text-center text-lg font-semibold">{quantity}</span>
-                <Button variant="secondary" onClick={addTicket} disabled={quantity >= maxQuantity}>
+                </button>
+                <span className="w-7 text-center text-lg font-medium">{quantity}</span>
+                <button type="button" aria-label="เพิ่มจำนวนบัตร" className={ROUND_BUTTON} onClick={addTicket} disabled={quantity >= maxQuantity}>
                   +
-                </Button>
-                <span className="text-xs text-slate-500">สูงสุด {maxQuantity} ใบ</span>
+                </button>
               </div>
             </div>
+          </div>
 
-            {/* 3. ชื่อผู้เข้าร่วมงาน 1 ช่องต่อบัตร 1 ใบ */}
-            <div className="space-y-3">
-              <p className="text-sm font-medium text-slate-700">ชื่อผู้เข้าร่วมงาน</p>
-              {attendeeNames.map((name, index) => (
-                <Input
-                  key={index}
-                  label={`บัตรใบที่ ${index + 1}`}
+          {/* 3. ชื่อผู้เข้าร่วมงาน 1 ช่องต่อบัตร 1 ใบ */}
+          <div className="flex flex-col gap-2">
+            <p className={STEP_TITLE}>3. ชื่อผู้เข้าร่วมงาน</p>
+            {attendeeNames.map((name, index) => (
+              <label key={index} className="flex flex-col gap-1.5 rounded-[14px] bg-base-200 px-4.5 py-3">
+                <span className="text-[13px] text-base-content/60">บัตรใบที่ {index + 1}</span>
+                <input
+                  className="bg-transparent py-1 text-base outline-none placeholder:text-base-content/60"
                   placeholder="ชื่อ-นามสกุล"
                   value={name}
                   onChange={(e) => changeName(index, e.target.value)}
                 />
-              ))}
+              </label>
+            ))}
+          </div>
+
+          {/* 4. ยอดรวม + ปุ่มยืนยัน */}
+          <div className="flex flex-col gap-3.5 border-t border-base-300 pt-6">
+            <div className="flex items-baseline justify-between">
+              <span className="text-[15px] text-base-content/60">ยอดรวม · {quantity} ใบ</span>
+              <span className="text-[44px] font-medium tracking-[-0.03em]">{total.toLocaleString()} บาท</span>
             </div>
 
-            {/* 4. ยอดรวม + ปุ่มยืนยัน */}
-            <div className="flex items-center justify-between border-t border-slate-100 pt-4">
-              <span className="text-sm text-slate-600">ยอดรวม</span>
-              <span className="text-xl font-bold text-slate-900">
-                {total.toLocaleString()} บาท
-              </span>
-            </div>
+            {error && <p className="text-sm text-error">{error}</p>}
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
-
-            <Button type="submit" size="lg" className="w-full">
+            <button
+              type="submit"
+              className="btn h-14 text-base font-normal text-white"
+              style={{ backgroundColor: accent, borderColor: accent }}
+            >
               ไปหน้าชำระเงิน
-            </Button>
-          </>
-        )}
-      </form>
-    </Card>
+            </button>
+            <span className="text-center text-[13px] text-base-content/60">
+              ระบบต้นแบบ ใช้ปุ่มจำลองชำระสำเร็จแทนการสแกนจ่ายจริง
+            </span>
+          </div>
+        </>
+      )}
+    </form>
   );
 }

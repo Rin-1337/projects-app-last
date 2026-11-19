@@ -6,7 +6,6 @@ import { CartPanel } from "@/components/customer/shop/CartPanel";
 import { getCartRows } from "@/components/customer/shop/getCartRows";
 import { ProductCard } from "@/components/customer/shop/ProductCard";
 import { useCart } from "@/components/customer/shop/useCart";
-import { Card } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import { useStore } from "@/lib/useStore";
 
@@ -18,6 +17,7 @@ import { useStore } from "@/lib/useStore";
 //   3. /customer/shop/checkout : กรอกที่อยู่ → ยืนยันคำสั่งซื้อ → ชำระด้วย QR
 //
 // สินค้าแยกตามงาน และตะกร้าใส่ได้ทีละงาน (ดูเหตุผลใน components/customer/shop/useCart.ts)
+// หน้าตาแบบ Posh (daisyUI theme posh)
 
 export default function CustomerShopPage() {
   const { user } = useAuth();
@@ -85,43 +85,37 @@ export default function CustomerShopPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900">เสื้อและของที่ระลึก</h1>
+    <div className="px-5 pt-6 pb-24 sm:px-10">
+      <h1 className="text-[56px] leading-none font-normal tracking-[-0.055em] sm:text-[88px] lg:text-[120px]">ของที่ระลึก.</h1>
+      <p className="mt-3 mb-8 text-base text-base-content/60">สินค้าแยกตามงาน ตะกร้าสั่งซื้อได้ทีละงาน</p>
 
       {eventsWithProducts.length === 0 && (
-        <Card className="text-center">
-          <p className="text-slate-600">ตอนนี้ยังไม่มีสินค้าวางขาย</p>
-        </Card>
+        <p className="rounded-3xl bg-base-200 p-6 text-center text-base-content/60">ตอนนี้ยังไม่มีสินค้าวางขาย</p>
       )}
 
       {/* ───── เลือกงาน ───── */}
       {eventsWithProducts.length > 1 && (
-        <div className="flex flex-wrap gap-2">
-          {eventsWithProducts.map((event) => {
-            let style = "border-slate-300 bg-white text-slate-700 hover:bg-slate-50";
-            if (event.id === currentEventId) {
-              style = "border-blue-600 bg-blue-600 text-white";
-            }
-            return (
-              <button
-                key={event.id}
-                type="button"
-                onClick={() => setPickedEventId(event.id)}
-                className={`rounded-full border px-4 py-1.5 text-sm font-medium ${style}`}
-              >
-                {event.title}
-              </button>
-            );
-          })}
+        <div className="mb-10 flex flex-wrap gap-2">
+          {eventsWithProducts.map((event) => (
+            <button
+              key={event.id}
+              type="button"
+              onClick={() => setPickedEventId(event.id)}
+              aria-pressed={event.id === currentEventId}
+              className={`btn h-11 px-5 text-sm font-normal ${event.id === currentEventId ? "btn-neutral" : "bg-base-200"}`}
+            >
+              {event.title}
+            </button>
+          ))}
         </div>
       )}
 
-      {message && <p className="text-sm text-green-700">{message}</p>}
+      {message && <p className="mb-4 text-sm text-success">{message}</p>}
 
       {eventsWithProducts.length > 0 && (
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="flex flex-wrap items-start gap-10">
           {/* ───── รายการสินค้า (ซ้าย 2 ส่วน) ───── */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
+          <div className="grid min-w-0 flex-[999_1_560px] grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-x-5 gap-y-10">
             {currentProducts.map((product) => (
               <ProductCard
                 key={product.id}
@@ -133,11 +127,9 @@ export default function CustomerShopPage() {
           </div>
 
           {/* ───── ตะกร้า (ขวา 1 ส่วน, บนมือถือจะอยู่ใต้รายการสินค้า) ───── */}
-          <div className="space-y-2 lg:sticky lg:top-4 lg:self-start">
+          <div className="max-w-100 min-w-0 flex-[1_1_320px] space-y-2 lg:sticky lg:top-4">
             {cart.items.length > 0 && cart.eventId !== currentEventId && (
-              <p className="text-xs text-amber-700">
-                ตะกร้านี้เป็นของงาน &quot;{cartEventTitle}&quot;
-              </p>
+              <p className="text-xs text-warning">ตะกร้านี้เป็นของงาน &quot;{cartEventTitle}&quot;</p>
             )}
             <CartPanel rows={cartRows} onChangeQuantity={changeQuantity} onRemove={removeItem} />
           </div>

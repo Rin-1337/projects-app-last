@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { Badge, Button, Card } from "@/components/ui";
 import type { MerchProduct } from "@/lib/types";
 import type { CartItem } from "./useCart";
 
@@ -65,100 +64,91 @@ export function ProductCard({
   }
 
   return (
-    <Card className="flex flex-col p-0">
+    <article className="flex flex-col gap-3.5">
       {/* รูปสินค้า (ถ้าไม่มีรูป แสดงกล่องสีเทาแทน) */}
-      <div className="relative aspect-square overflow-hidden rounded-t-xl bg-slate-100">
+      <div className="relative aspect-square overflow-hidden rounded-md bg-base-200">
         {product.image ? (
           <Image src={product.image} alt={product.name} fill unoptimized className="object-cover" />
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-slate-400">
-            ไม่มีรูปสินค้า
-          </div>
+          <div className="flex h-full items-center justify-center text-sm text-base-content/60">ไม่มีรูปสินค้า</div>
         )}
-      </div>
-
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        <div>
-          <h3 className="font-semibold text-slate-900">{product.name}</h3>
-          {product.description && (
-            <p className="mt-1 text-sm text-slate-600">{product.description}</p>
-          )}
-          <p className="mt-2 text-lg font-bold text-slate-900">
-            {product.price.toLocaleString()} บาท
-          </p>
-        </div>
-
         {isSoldOut && (
-          <div>
-            <Badge tone="red">สินค้าหมด</Badge>
-          </div>
-        )}
-
-        {!isSoldOut && (
-          <>
-            {/* 1. เลือกไซซ์ */}
-            {hasSizes && (
-              <div>
-                <p className="mb-1 text-xs text-slate-500">ไซซ์</p>
-                <div className="flex flex-wrap gap-2">
-                  {product.variants.map((variant) => {
-                    const isSelected = variant.size === selectedSize;
-                    const isEmpty = variant.stock <= 0;
-
-                    let style = "border-slate-300 text-slate-700 hover:bg-slate-50";
-                    if (isSelected) {
-                      style = "border-blue-600 bg-blue-50 text-blue-700";
-                    }
-
-                    return (
-                      <button
-                        key={variant.size}
-                        type="button"
-                        disabled={isEmpty}
-                        onClick={() => selectSize(variant.size)}
-                        className={`min-w-10 rounded-lg border px-3 py-1 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40 ${style}`}
-                      >
-                        {variant.size}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* 2. เลือกจำนวน */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setQuantity(quantity - 1)}
-                disabled={quantity <= 1}
-              >
-                −
-              </Button>
-              <span className="w-8 text-center font-semibold">{quantity}</span>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setQuantity(quantity + 1)}
-                disabled={quantity >= canAddMore}
-              >
-                +
-              </Button>
-              <span className="text-xs text-slate-500">เหลือ {stock} ชิ้น</span>
-            </div>
-
-            {quantityInCart > 0 && (
-              <p className="text-xs text-blue-700">อยู่ในตะกร้าแล้ว {quantityInCart} ชิ้น</p>
-            )}
-
-            {/* 3. ใส่ตะกร้า (ดันไว้ล่างสุดของการ์ด ปุ่มทุกการ์ดจะได้อยู่ระดับเดียวกัน) */}
-            <Button className="mt-auto w-full" onClick={handleAdd} disabled={canAddMore <= 0}>
-              {canAddMore <= 0 ? "ใส่ตะกร้าครบจำนวนที่มีแล้ว" : "ใส่ตะกร้า"}
-            </Button>
-          </>
+          <span className="absolute top-3.5 right-3.5 rounded-full bg-white px-3 py-1.5 text-[13px] text-[#B42318]">
+            สินค้าหมด
+          </span>
         )}
       </div>
-    </Card>
+
+      <div className="flex justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-[17px] font-medium">{product.name}</h3>
+          {product.description && <p className="text-sm text-base-content/60">{product.description}</p>}
+        </div>
+        <p className="text-base whitespace-nowrap">{product.price.toLocaleString()} บาท</p>
+      </div>
+
+      {!isSoldOut && (
+        <>
+          {/* 1. เลือกไซซ์ (ไซซ์ที่หมดจะขีดฆ่า กดไม่ได้) */}
+          {hasSizes && (
+            <div className="flex flex-wrap gap-1.5">
+              {product.variants.map((variant) => {
+                const isSelected = variant.size === selectedSize;
+                let style = "border-base-300 bg-base-100";
+                if (isSelected) {
+                  style = "border-base-content bg-base-content text-base-100";
+                }
+                return (
+                  <button
+                    key={variant.size}
+                    type="button"
+                    disabled={variant.stock <= 0}
+                    onClick={() => selectSize(variant.size)}
+                    aria-pressed={isSelected}
+                    className={`h-10 min-w-11 rounded-full border px-3 text-sm disabled:cursor-not-allowed disabled:border-dashed disabled:text-base-content/40 disabled:line-through ${style}`}
+                  >
+                    {variant.size}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* 2. จำนวน + ใส่ตะกร้า */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="ลดจำนวน"
+              className="btn btn-circle btn-sm bg-base-200 font-normal"
+              onClick={() => setQuantity(quantity - 1)}
+              disabled={quantity <= 1}
+            >
+              −
+            </button>
+            <span className="w-5 text-center text-sm">{quantity}</span>
+            <button
+              type="button"
+              aria-label="เพิ่มจำนวน"
+              className="btn btn-circle btn-sm bg-base-200 font-normal"
+              onClick={() => setQuantity(quantity + 1)}
+              disabled={quantity >= canAddMore}
+            >
+              +
+            </button>
+            <span className="flex-1 text-[13px] text-base-content/60">เหลือ {stock} ชิ้น</span>
+            <button
+              type="button"
+              className="btn btn-neutral h-11 px-5.5 text-sm font-normal"
+              onClick={handleAdd}
+              disabled={canAddMore <= 0}
+            >
+              {canAddMore <= 0 ? "ครบแล้ว" : "ใส่ตะกร้า"}
+            </button>
+          </div>
+
+          {quantityInCart > 0 && <p className="text-[13px] text-base-content/60">อยู่ในตะกร้าแล้ว {quantityInCart} ชิ้น</p>}
+        </>
+      )}
+    </article>
   );
 }
