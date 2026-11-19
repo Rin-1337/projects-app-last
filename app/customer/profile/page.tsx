@@ -3,6 +3,7 @@
 import { PasswordForm } from "@/components/customer/profile/PasswordForm";
 import { ProfileForm } from "@/components/customer/profile/ProfileForm";
 import { useAuth } from "@/lib/auth";
+import { PAGE_TITLE } from "@/components/customer/common/styles";
 
 // หน้าโปรไฟล์ — ผู้รับผิดชอบ: ทิวากร
 //   ซ้าย: แก้ชื่อ / เบอร์โทร (ProfileForm)
@@ -18,7 +19,7 @@ export default function CustomerProfilePage() {
 
   return (
     <div className="mx-auto max-w-275 space-y-12 px-5 pt-6 pb-24 sm:px-10">
-      <h1 className="text-[56px] leading-none font-normal tracking-[-0.055em] sm:text-[88px] lg:text-[120px]">โปรไฟล์.</h1>
+      <h1 className={PAGE_TITLE}>โปรไฟล์.</h1>
 
       {/* ชื่อ + รหัสสมาชิก */}
       <div className="flex flex-wrap items-center gap-5">

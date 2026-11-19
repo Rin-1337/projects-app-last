@@ -20,7 +20,11 @@ const COLORS = [
   { bg: "#F1E9DE", ink: "#2E2A26", accent: "#5B4636" },
 ];
 
-/** เลือกสีจาก id ของงาน (รวมรหัสตัวอักษรแล้วหารเอาเศษ) งานเดิมจะได้สีเดิมทุกครั้ง */
+/**
+ * เลือกสีจาก id ของงาน งานเดิมจะได้สีเดิมทุกครั้ง (ไม่ต้องเก็บสีไว้ในข้อมูลงาน)
+ * วิธี: บวกรหัสตัวอักษรของ id ทุกตัว แล้วหารด้วยจำนวนสี เอาเศษมาเป็นลำดับสี
+ * เช่น เศษ 2 → ได้สีที่ 3 ในตาราง COLORS (นับจาก 0)
+ */
 export function getEventColor(eventId: string) {
   let sum = 0;
   for (const char of eventId) {
@@ -29,7 +33,7 @@ export function getEventColor(eventId: string) {
   return COLORS[sum % COLORS.length];
 }
 
-/** ขนาดตัวหนังสือและระยะขอบของใบปิดแต่ละขนาด */
+/** ขนาดตัวหนังสือและระยะขอบของใบปิดแต่ละขนาด (ตัวเลขตามไฟล์ design) */
 const SIZES = {
   xs: { title: "text-[11px]", padding: "p-2" }, // ใบเล็กมาก (บัตรของฉัน)
   sm: { title: "text-[26px]", padding: "p-4" }, // ใบเล็กในแถบหน้าแรก

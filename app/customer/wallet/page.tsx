@@ -133,7 +133,7 @@ export default function CustomerWalletPage() {
   }
 
   return (
-    <div data-theme="posh-dark" className="min-h-screen bg-base-100 text-base-content">
+    <>
       <div className="mx-auto max-w-275 px-5 pt-6 pb-24 sm:px-10">
         {/* ───── ส่วนที่ 1 + 2: ยอดคงเหลือ และ QR จ่ายร้านค้า ───── */}
         <div className="mb-14 flex flex-wrap items-end justify-between gap-8">
@@ -259,7 +259,7 @@ export default function CustomerWalletPage() {
           </div>
         </Modal>
       )}
-    </div>
+    </>
   );
 }
 

@@ -23,7 +23,7 @@ export default function CustomerEventDetailPage() {
   // useParams ต้องอยู่ใน Suspense เพราะโปรเจคเปิด cacheComponents
   // (Next.js ไม่รู้ id ล่วงหน้าตอน build) จึงแยกเนื้อหาไปไว้ใน EventDetail ด้านล่าง
   return (
-    <Suspense fallback={<div data-theme="posh-dark" className="min-h-screen bg-base-100" />}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <EventDetail />
     </Suspense>
   );
@@ -47,13 +47,11 @@ function EventDetail() {
 
   if (!event) {
     return (
-      <div data-theme="posh-dark" className="min-h-screen bg-base-100 text-base-content">
-        <div className="mx-auto max-w-300 px-5 pt-6 pb-24 sm:px-10">
-          <BackLink />
-          <p className="mt-6 rounded-2xl bg-base-200 p-6 text-center text-base-content/60">
-            ไม่พบงานนี้ หรืองานปิดการขายแล้ว
-          </p>
-        </div>
+      <div className="mx-auto max-w-300 px-5 pt-6 pb-24 sm:px-10">
+        <BackLink />
+        <p className="mt-6 rounded-2xl bg-base-200 p-6 text-center text-base-content/60">
+          ไม่พบงานนี้ หรืองานปิดการขายแล้ว
+        </p>
       </div>
     );
   }
@@ -70,7 +68,7 @@ function EventDetail() {
   }
 
   return (
-    <div data-theme="posh-dark" className="min-h-screen bg-base-100 text-base-content">
+    <>
       <div className="mx-auto max-w-300 px-5 pt-6 pb-24 sm:px-10">
         <BackLink />
 
@@ -86,21 +84,34 @@ function EventDetail() {
               <h1 className="text-[44px] leading-[1.02] font-normal tracking-[-0.045em] sm:text-[64px]">
                 {event.title}
               </h1>
-              <p className="text-base text-base-content/60">{formatEventDate(event.startAt)}</p>
+              <p className="text-base text-base-content/60">
+                {formatEventDate(event.startAt)}
+              </p>
               <p className="text-base text-base-content/60">{event.location}</p>
-              <p className="mt-1 text-[15px]">{going.toLocaleString()} คนกำลังจะไป</p>
+              <p className="mt-1 text-[15px]">
+                {going.toLocaleString()} คนกำลังจะไป
+              </p>
             </div>
 
             {/* ซื้อสำเร็จแล้วแสดงข้อความแทนฟอร์ม */}
             {tickets ? (
               <div className="flex flex-col items-center gap-3 rounded-2xl bg-base-200 p-6 text-center">
                 <p className="text-xl text-success">ชำระเงินสำเร็จ</p>
-                <p className="text-sm text-base-content/60">ได้รับบัตรแล้ว {tickets.length} ใบ</p>
+                <p className="text-sm text-base-content/60">
+                  ได้รับบัตรแล้ว {tickets.length} ใบ
+                </p>
                 <div className="flex gap-2">
-                  <Link href="/customer/tickets" className="btn btn-neutral font-normal">
+                  <Link
+                    href="/customer/tickets"
+                    className="btn btn-neutral font-normal"
+                  >
                     ดูบัตรของฉัน
                   </Link>
-                  <button type="button" onClick={() => setTickets(null)} className="btn bg-base-300 font-normal">
+                  <button
+                    type="button"
+                    onClick={() => setTickets(null)}
+                    className="btn bg-base-300 font-normal"
+                  >
                     ซื้อเพิ่ม
                   </button>
                 </div>
@@ -115,20 +126,31 @@ function EventDetail() {
 
             <section className="flex flex-col gap-2.5 border-t border-base-300 pt-6">
               <h2 className="text-xl font-medium">เกี่ยวกับงาน</h2>
-              <p className="text-base leading-[1.75] whitespace-pre-line text-[#D4D4D4]">{event.description}</p>
+              <p className="text-base leading-[1.75] whitespace-pre-line text-[#D4D4D4]">
+                {event.description}
+              </p>
             </section>
           </div>
         </div>
       </div>
 
-      {order && <PaymentModal order={order} onPaid={handlePaid} onCancel={() => setOrder(null)} />}
-    </div>
+      {order && (
+        <PaymentModal
+          order={order}
+          onPaid={handlePaid}
+          onCancel={() => setOrder(null)}
+        />
+      )}
+    </>
   );
 }
 
 function BackLink() {
   return (
-    <Link href="/customer/events" className="text-sm text-base-content/60 hover:text-base-content">
+    <Link
+      href="/customer/events"
+      className="text-sm text-base-content/60 hover:text-base-content"
+    >
       ← รายการ Event
     </Link>
   );

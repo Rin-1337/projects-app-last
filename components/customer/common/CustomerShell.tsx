@@ -7,6 +7,7 @@ import { Suspense, type ReactNode } from "react";
 import type { NavItem } from "@/components/shared/RoleNav";
 import { useAuth } from "@/lib/auth";
 import { useStore } from "@/lib/useStore";
+import { isDarkPage } from "./styles";
 import { useIsClient } from "./useIsClient";
 
 /**
@@ -15,7 +16,8 @@ import { useIsClient } from "./useIsClient";
  *
  *   ซ้าย: ชื่อเว็บ
  *   ขวา: เมนู + ปุ่มยอด Token (ยังไม่ล็อกอิน: ปุ่มเข้าสู่ระบบ / สมัครสมาชิก)
- *   หน้ารายละเอียดงาน / บัตรของฉัน / Wallet เป็นพื้นดำ header จะเป็นสีดำตาม
+ *   หน้าพื้นดำ (รายชื่ออยู่ใน styles.ts) → ทั้ง header และเนื้อหาใช้ theme posh-dark
+ *   แต่ละหน้าจึงไม่ต้องใส่ data-theme เอง
  */
 
 // ฟอนต์ตามแบบ: Inter (อังกฤษ) + IBM Plex Sans Thai (ไทย) ใช้เฉพาะฝั่งลูกค้า
@@ -25,33 +27,40 @@ const FONT_FAMILY = `${inter.style.fontFamily}, ${plexThai.style.fontFamily}, sy
 
 export function CustomerShell({ nav, children }: { nav: NavItem[]; children: ReactNode }) {
   return (
-    <div className="flex-1 bg-base-100 text-base-content" style={{ fontFamily: FONT_FAMILY }}>
+    <div className="flex flex-1 flex-col" style={{ fontFamily: FONT_FAMILY }}>
       {/* usePathname ต้องอยู่ใน Suspense เพราะโปรเจคเปิด cacheComponents */}
-      <Suspense fallback={<Header nav={nav} pathname="" />}>
-        <HeaderWithPath nav={nav} />
+      <Suspense fallback={<Frame nav={nav} pathname="">{children}</Frame>}>
+        <FrameWithPath nav={nav}>{children}</FrameWithPath>
       </Suspense>
+    </div>
+  );
+}
 
-      {/* ไม่ครอบความกว้างตรงนี้ ให้แต่ละหน้าจัดเอง (หน้าพื้นดำต้องใช้พื้นเต็มจอ) */}
+function FrameWithPath({ nav, children }: { nav: NavItem[]; children: ReactNode }) {
+  const pathname = usePathname();
+  return (
+    <Frame nav={nav} pathname={pathname}>
+      {children}
+    </Frame>
+  );
+}
+
+/** กรอบทั้งหน้า: เลือกพื้นขาว/พื้นดำตาม path แล้ววาง header + เนื้อหา */
+function Frame({ nav, pathname, children }: { nav: NavItem[]; pathname: string; children: ReactNode }) {
+  return (
+    <div data-theme={isDarkPage(pathname) ? "posh-dark" : "posh"} className="flex-1 bg-base-100 text-base-content">
+      <Header nav={nav} pathname={pathname} />
+      {/* ไม่ครอบความกว้างตรงนี้ ให้แต่ละหน้าจัดเอง */}
       <main>{children}</main>
     </div>
   );
 }
 
-/** หน้าที่เป็นพื้นดำ (theme posh-dark) */
-function isDarkPage(pathname: string) {
-  return (
-    pathname.startsWith("/customer/events/") ||
-    pathname.startsWith("/customer/tickets") ||
-    pathname.startsWith("/customer/wallet")
-  );
-}
-
-function HeaderWithPath({ nav }: { nav: NavItem[] }) {
-  const pathname = usePathname();
-  return <Header nav={nav} pathname={pathname} />;
-}
-
-/** หาเมนูของหน้าปัจจุบัน (เลือก href ที่ยาวที่สุดที่ตรงกับ path เหมือน RoleNav) */
+/**
+ * หาเมนูของหน้าปัจจุบัน (เหมือน RoleNav)
+ * เลือก href ที่ยาวที่สุดที่ตรงกับ path เช่นอยู่หน้า /customer/shop/checkout
+ * ทั้ง "/customer/shop" และ "/customer" ตรง → เลือก "/customer/shop" เพราะยาวกว่า
+ */
 function findActiveHref(nav: NavItem[], pathname: string) {
   let activeHref = "";
   for (const item of nav) {
@@ -67,10 +76,7 @@ function Header({ nav, pathname }: { nav: NavItem[]; pathname: string }) {
   const activeHref = findActiveHref(nav, pathname);
 
   return (
-    <header
-      data-theme={isDarkPage(pathname) ? "posh-dark" : "posh"}
-      className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 bg-base-100 px-5 py-5 text-base-content sm:px-10"
-    >
+    <header className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 px-5 py-5 sm:px-10">
       <Link href="/" className="text-[19px] font-semibold tracking-[-0.03em]">
         eventhub
       </Link>

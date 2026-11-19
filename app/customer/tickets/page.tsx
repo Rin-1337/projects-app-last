@@ -10,6 +10,7 @@ import { Modal } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import type { PaymentStatus } from "@/lib/types";
 import { useStore } from "@/lib/useStore";
+import { PAGE_TITLE_SM } from "@/components/customer/common/styles";
 
 // หน้าบัตรของฉัน — ผู้รับผิดชอบ: ทิวากร
 // ส่วนบน:  บัตรทุกใบของผู้ใช้ แยกตามงาน กด "แสดง QR" เพื่อให้เจ้าหน้าที่สแกนเช็กอิน
@@ -73,9 +74,9 @@ export default function CustomerTicketsPage() {
   }
 
   return (
-    <div data-theme="posh-dark" className="min-h-screen bg-base-100 text-base-content">
+    <>
       <div className="mx-auto max-w-250 px-5 pt-6 pb-24 sm:px-10">
-        <h1 className="mb-12 text-[56px] leading-none font-normal tracking-[-0.055em] sm:text-[88px] lg:text-[112px]">
+        <h1 className={`mb-12 ${PAGE_TITLE_SM}`}>
           บัตรของฉัน.
         </h1>
 
@@ -156,6 +157,6 @@ export default function CustomerTicketsPage() {
           )}
         </Modal>
       )}
-    </div>
+    </>
   );
 }

@@ -6,6 +6,7 @@ import { EventCard } from "@/components/customer/common/EventCard";
 import { getPublishedEvents } from "@/components/customer/common/getPublishedEvents";
 import type { EventCategory, EventItem } from "@/lib/types";
 import { useStore } from "@/lib/useStore";
+import { PAGE_TITLE } from "@/components/customer/common/styles";
 
 // หน้ารายการ Event — ผู้รับผิดชอบ: ทิวากร
 // แสดงงานที่เปิดขายทั้งหมด พร้อมประเภทบัตร ราคา และจำนวนคงเหลือ (อยู่ใน EventCard)
@@ -54,7 +55,7 @@ export default function CustomerEventsPage() {
 
   return (
     <div className="px-5 pt-6 pb-24 sm:px-10">
-      <h1 className="mb-10 text-[56px] leading-none font-normal tracking-[-0.055em] sm:text-[88px] lg:text-[120px]">
+      <h1 className={`mb-10 ${PAGE_TITLE}`}>
         รายการ Event.
       </h1>
 

@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth";
 import { createOnlineOrder } from "@/lib/services/merch";
 import type { MerchOrder } from "@/lib/types";
 import { useStore } from "@/lib/useStore";
+import { PAGE_TITLE_SM } from "@/components/customer/common/styles";
 
 // หน้าสั่งซื้อเสื้อและของที่ระลึก — ผู้รับผิดชอบ: ทิวากร
 //
@@ -134,7 +135,7 @@ export default function CustomerCheckoutPage() {
 
   return (
     <div className="mx-auto max-w-300 space-y-10 px-5 pt-6 pb-24 sm:px-10">
-      <h1 className="text-[56px] leading-none font-normal tracking-[-0.055em] sm:text-[88px] lg:text-[112px]">สั่งซื้อสินค้า.</h1>
+      <h1 className={PAGE_TITLE_SM}>สั่งซื้อสินค้า.</h1>
 
       {/* ───── 1. ที่อยู่ (ซ้าย) + สรุปรายการ (ขวา, บนมือถืออยู่ด้านบน) ───── */}
       <div className="grid gap-5 lg:grid-cols-5">
