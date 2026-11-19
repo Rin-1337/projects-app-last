@@ -46,7 +46,7 @@ export default function CustomerOrdersPage() {
 
   return (
     <div className="mx-auto max-w-275 px-5 pt-6 pb-24 sm:px-10">
-      <h1 className={PAGE_TITLE_SM}>ประวัติรายการ.</h1>
+      <h1 className={PAGE_TITLE_SM}>คำสั่งซื้อ.</h1>
       <p className="mt-3 mb-10 text-base text-base-content/60">คำสั่งซื้อเสื้อและของที่ระลึก ล่าสุดขึ้นก่อน</p>
 
       {/* ───── ยังไม่เคยสั่งซื้อ ───── */}

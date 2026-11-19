@@ -132,12 +132,32 @@ function HeaderAccount() {
 
   return (
     <div className="flex items-center gap-4">
-      <Link href="/customer/wallet" className="inline-flex h-11 items-center rounded-full bg-base-200 px-4.5 text-sm">
+      <Link href="/customer/wallet" className="inline-flex h-11 items-center gap-1.5 rounded-full bg-base-200 px-4.5 text-sm">
+        <WalletIcon />
         {balance.toLocaleString()} Token
       </Link>
       <button type="button" onClick={logout} className="text-sm text-base-content/70 hover:text-base-content">
         ออกจากระบบ
       </button>
     </div>
+  );
+}
+
+/** ไอคอนกระเป๋าเงิน (เส้น สีตามตัวหนังสือ จึงเป็นสีขาวเองบนหน้าพื้นดำ) — รูปจาก Tabler Icons */
+function WalletIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-4.5 w-4.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M17 8v-3a1 1 0 0 0 -1 -1h-10a2 2 0 0 0 0 4h12a1 1 0 0 1 1 1v3m0 4v3a1 1 0 0 1 -1 1h-12a2 2 0 0 1 -2 -2v-12" />
+      <path d="M20 12v4h-4a2 2 0 0 1 0 -4h4" />
+    </svg>
   );
 }

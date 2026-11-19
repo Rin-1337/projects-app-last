@@ -56,7 +56,7 @@ export default function CustomerEventsPage() {
   return (
     <div className="px-5 pt-6 pb-24 sm:px-10">
       <h1 className={`mb-10 ${PAGE_TITLE}`}>
-        รายการ Event.
+        อีเวนต์.
       </h1>
 
       <div className="mb-5 flex flex-wrap items-center gap-3">

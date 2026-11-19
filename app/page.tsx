@@ -36,14 +36,6 @@ function HomeContent() {
   const current = publishedEvents.find((event) => event.id === pickedId) ?? publishedEvents[0];
   const color = getEventColor(current);
 
-  // จำนวนคนที่จะไป = บัตรที่ขายไปแล้วของทุกประเภทรวมกัน
-  let going = 0;
-  for (const ticketType of ticketTypes) {
-    if (ticketType.eventId === current.id) {
-      going += ticketType.sold;
-    }
-  }
-
   return (
     <>
       <h1 className="px-5 text-right text-[72px] leading-none font-normal tracking-[-0.055em] sm:px-10 sm:text-[120px] lg:text-[168px]">
@@ -76,7 +68,6 @@ function HomeContent() {
         <p className="text-[15px] text-base-content/60">
           {formatEventDate(current.startAt)} · {current.location}
         </p>
-        <p className="text-[15px] text-base-content/60">{going.toLocaleString()} คนกำลังจะไป</p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Link
             href={`/customer/events/${current.id}`}
