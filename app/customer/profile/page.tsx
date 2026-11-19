@@ -19,7 +19,7 @@ export default function CustomerProfilePage() {
 
   return (
     <div className="mx-auto max-w-275 space-y-12 px-5 pt-6 pb-24 sm:px-10">
-      <h1 className={PAGE_TITLE}>โปรไฟล์.</h1>
+      <h1 className={PAGE_TITLE}>บัญชี.</h1>
 
       {/* ชื่อ + รหัสสมาชิก */}
       <div className="flex flex-wrap items-center gap-5">

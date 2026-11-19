@@ -56,12 +56,6 @@ function EventDetail() {
     );
   }
 
-  // จำนวนคนที่จะไป = บัตรที่ขายไปแล้วของทุกประเภทรวมกัน
-  let going = 0;
-  for (const ticketType of ticketTypes) {
-    going += ticketType.sold;
-  }
-
   function handlePaid(newTickets: Ticket[]) {
     setOrder(null);
     setTickets(newTickets);
@@ -88,9 +82,6 @@ function EventDetail() {
                 {formatEventDate(event.startAt)}
               </p>
               <p className="text-base text-base-content/60">{event.location}</p>
-              <p className="mt-1 text-[15px]">
-                {going.toLocaleString()} คนกำลังจะไป
-              </p>
             </div>
 
             {/* ซื้อสำเร็จแล้วแสดงข้อความแทนฟอร์ม */}
