@@ -1,7 +1,7 @@
 import type { EventCategory } from "@/lib/types";
 
 /**
- * หมวดหมู่งาน — ชื่อภาษาไทยสำหรับปุ่มกรองในหน้ารายการ Event
+ * หมวดหมู่งาน — ชื่อภาษาไทยสำหรับปุ่มกรองในหน้ารายการ Event และช่องเลือกในฟอร์มสร้างงานของ Organizer
  * และคำภาษาอังกฤษสำหรับหัวข้อตัวใหญ่ในหน้าแรก (เช่น "Music.")
  * ลำดับใน CATEGORY_ORDER = ลำดับปุ่ม
  */
@@ -25,10 +25,7 @@ const CATEGORY_WORD: Record<EventCategory, string> = {
   workshop: "Workshop",
 };
 
-/** คำสำหรับหัวข้อใหญ่ของงาน (งานที่ยังไม่มีหมวดหมู่ใช้ "Events") */
-export function getCategoryWord(category: EventCategory | undefined) {
-  if (category) {
-    return CATEGORY_WORD[category];
-  }
-  return "Events";
+/** คำสำหรับหัวข้อใหญ่ของงาน */
+export function getCategoryWord(category: EventCategory) {
+  return CATEGORY_WORD[category];
 }

@@ -49,8 +49,8 @@ export interface EventItem {
   /** วันเวลาเริ่มงาน */
   startAt: string;
   location: string;
-  /** หมวดหมู่งาน — ไม่บังคับ งานที่ยังไม่ได้ตั้งจะแสดงอยู่ใต้ "ทั้งหมด" อย่างเดียว */
-  category?: EventCategory;
+  /** หมวดหมู่งาน — บังคับ Organizer ต้องเลือกตอนสร้าง/แก้งาน */
+  category: EventCategory;
   coverImage?: string;
   /** Organizer ที่ Admin มอบหมาย (null = ยังไม่มีผู้รับผิดชอบ) */
   organizerId: ID | null;

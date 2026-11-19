@@ -8,6 +8,7 @@ import { ProductCard } from "@/components/customer/shop/ProductCard";
 import { useCart } from "@/components/customer/shop/useCart";
 import { useAuth } from "@/lib/auth";
 import { useStore } from "@/lib/useStore";
+import { PAGE_TITLE } from "@/components/customer/common/styles";
 
 // หน้าเสื้อและของที่ระลึก — ผู้รับผิดชอบ: ทิวากร
 //
@@ -86,7 +87,7 @@ export default function CustomerShopPage() {
 
   return (
     <div className="px-5 pt-6 pb-24 sm:px-10">
-      <h1 className="text-[56px] leading-none font-normal tracking-[-0.055em] sm:text-[88px] lg:text-[120px]">ของที่ระลึก.</h1>
+      <h1 className={PAGE_TITLE}>ของที่ระลึก.</h1>
       <p className="mt-3 mb-8 text-base text-base-content/60">สินค้าแยกตามงาน ตะกร้าสั่งซื้อได้ทีละงาน</p>
 
       {eventsWithProducts.length === 0 && (

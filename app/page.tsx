@@ -34,7 +34,7 @@ function HomeContent() {
   }
 
   const current = publishedEvents.find((event) => event.id === pickedId) ?? publishedEvents[0];
-  const color = getEventColor(current.id);
+  const color = getEventColor(current);
 
   // จำนวนคนที่จะไป = บัตรที่ขายไปแล้วของทุกประเภทรวมกัน
   let going = 0;
