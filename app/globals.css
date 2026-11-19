@@ -1,5 +1,48 @@
 @import "tailwindcss";
 
+/* ───── daisyUI (ฝั่ง Customer ใช้ทำหน้าตาแบบ Posh) ─────
+   ปิด theme สำเร็จรูปทั้งหมด ใช้เฉพาะ theme ที่ตั้งเองด้านล่าง
+   กันไม่ให้สลับเป็นธีมมืดเองตามเครื่อง ซึ่งจะทำให้หน้าของ Role อื่นเพี้ยน
+   daisyUI ไม่แต่ง element เดิม จนกว่าจะใส่ class ของมัน (btn, card, input ...) */
+@plugin "daisyui" {
+  themes: false;
+}
+
+/* theme หลัก: พื้นขาว ปุ่มและช่องกรอกทรงแคปซูล */
+@plugin "daisyui/theme" {
+  name: "posh";
+  default: true;
+  color-scheme: light;
+  --color-base-100: #ffffff;
+  --color-base-200: #f5f5f5;
+  --color-base-300: #ebebeb;
+  --color-base-content: #0a0a0a;
+  --color-primary: #7c3aed;
+  --color-primary-content: #ffffff;
+  --color-neutral: #0a0a0a;
+  --color-neutral-content: #ffffff;
+  --radius-field: 2rem;
+  --radius-selector: 2rem;
+  --radius-box: 1.5rem;
+}
+
+/* theme พื้นดำ: ใส่ data-theme="posh-dark" ที่กรอบหน้า (ซื้อบัตร / บัตรของฉัน / Wallet) */
+@plugin "daisyui/theme" {
+  name: "posh-dark";
+  color-scheme: dark;
+  --color-base-100: #0a0a0a;
+  --color-base-200: #1a1a1a;
+  --color-base-300: #262626;
+  --color-base-content: #fafafa;
+  --color-primary: #7c3aed;
+  --color-primary-content: #ffffff;
+  --color-neutral: #fafafa;
+  --color-neutral-content: #0a0a0a;
+  --radius-field: 2rem;
+  --radius-selector: 2rem;
+  --radius-box: 1.5rem;
+}
+
 @theme inline {
   --font-sans: var(--font-noto-thai), ui-sans-serif, system-ui, sans-serif;
 }
