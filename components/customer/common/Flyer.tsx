@@ -25,7 +25,7 @@ const CATEGORY_COLOR: Record<EventCategory, { bg: string; ink: string; accent: s
 
 /** สีของงาน: ดูจากหมวดหมู่ (ทุกงานต้องมีหมวดหมู่ Organizer บังคับเลือกตอนสร้าง) */
 export function getEventColor(event: EventItem) {
-  return CATEGORY_COLOR[event.category];
+  return CATEGORY_COLOR[event.category] ?? CATEGORY_COLOR.party;
 }
 
 /** ขนาดตัวหนังสือและระยะขอบของใบปิดแต่ละขนาด (ตัวเลขตามไฟล์ design) */

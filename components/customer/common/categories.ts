@@ -27,5 +27,5 @@ const CATEGORY_WORD: Record<EventCategory, string> = {
 
 /** คำสำหรับหัวข้อใหญ่ของงาน */
 export function getCategoryWord(category: EventCategory) {
-  return CATEGORY_WORD[category];
+  return CATEGORY_WORD[category] ?? "Events";
 }
