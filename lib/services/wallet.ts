@@ -132,8 +132,8 @@ function assertValidAmount(amount: number) : void {
   }
 }
 
-/** เติมได้สูงสุดครั้งละเท่านี้ กันพิมพ์เลขเกินจริง (เช่น 9999999) */
-const MAX_TOPUP = 10000;
+/** เติมได้สูงสุดครั้งละเท่านี้ กันพิมพ์เลขเกินจริง (เช่น 9999999) — export ให้หน้าเว็บใช้แสดง/เช็กก่อนด้วย */
+export const MAX_TOPUP = 10000;
 
 /** เช็กยอดเติม: ต้องเป็นจำนวนเต็มบวก และไม่เกิน MAX_TOPUP ต่อครั้ง */
 function assertValidTopup(amount: number): void {
