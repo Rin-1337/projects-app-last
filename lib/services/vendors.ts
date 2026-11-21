@@ -316,6 +316,12 @@ export function sellToCustomer(input: {
   if (!result.ok) {
     return result;
   }
+  logAction({
+    actorId: vendor.userId,
+    action: "vendor.sale",
+    targetId: customer.id,
+    detail: `${vendor.shopName} ขาย ${vendor.productName} ×${quantity} ให้ ${customer.name} (${total} Token)`,
+  });
   return { ok: true, tx: result.tx, customerName: customer.name, total };
 }
 
@@ -368,6 +374,11 @@ export function saveBankAccount(account: BankAccount): BankAccount {
           : b,
       );
     return [...others, saved];
+  });
+  logAction({
+    action: "vendor.bank",
+    targetId: saved.id,
+    detail: `${isNew ? "เพิ่ม" : "แก้ไข"}บัญชีธนาคาร ${saved.bankName}`,
   });
   return saved;
 }

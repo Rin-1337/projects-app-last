@@ -132,6 +132,17 @@ function assertValidAmount(amount: number) : void {
   }
 }
 
+/** เติมได้สูงสุดครั้งละเท่านี้ กันพิมพ์เลขเกินจริง (เช่น 9999999) */
+const MAX_TOPUP = 10000;
+
+/** เช็กยอดเติม: ต้องเป็นจำนวนเต็มบวก และไม่เกิน MAX_TOPUP ต่อครั้ง */
+function assertValidTopup(amount: number): void {
+  assertValidAmount(amount);
+  if (amount > MAX_TOPUP) {
+    throw new Error(`เติมได้สูงสุดครั้งละ ${MAX_TOPUP.toLocaleString()} Token`);
+  }
+}
+
 /* ═══════════════════════ ฟังก์ชันที่ไฟล์อื่นเรียกใช้ได้ (export) ═══════════════════════ */
 
 /**
@@ -178,15 +189,17 @@ export function getBalance(userId: ID): number {
  *      ถ้าเป็นระบบจริงต้องใช้ database transaction ให้สองขั้นสำเร็จหรือล้มเหลวพร้อมกัน
  */
 export function topupOnline(customerId: ID, amount: number): TokenTransaction {
-  assertValidAmount(amount);
+  assertValidTopup(amount);
   changeBalance(customerId, amount);
-  return addTransaction({
+  const tx = addTransaction({
     type: "topup",
     amount,
     fromUserId: null,
     toUserId: customerId,
     channel: "online_qr",
   });
+  logAction({ actorId: customerId, action: "wallet.topup_online", detail: `เติม ${amount} Token ผ่าน QR ออนไลน์` });
+  return tx;
 }
 
 /**
@@ -219,7 +232,7 @@ export function topupOnsite(input: {
   adminId: ID;
 }): TokenTransaction {
   const { customerId, amount, channel, adminId } = input;
-  assertValidAmount(amount);
+  assertValidTopup(amount);
   changeBalance(customerId, amount);
   const tx = addTransaction({
     type: "topup",

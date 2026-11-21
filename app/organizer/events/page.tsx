@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { Badge, Button, Card, CardTitle, Input, Modal } from "@/components/ui";
 import { CATEGORY_LABEL, CATEGORY_ORDER } from "@/components/customer/common/categories";
-import { saveEvent } from "@/lib/services/events";
+import { isEventOver, saveEvent } from "@/lib/services/events";
 import type { EventCategory, EventItem, EventStatus } from "@/lib/types";
 import { useStore } from "@/lib/useStore";
 
@@ -43,6 +43,8 @@ export default function OrganizerEventsPage() {
   // หมวดหมู่งาน ("" = ยังไม่ได้เลือก) — บังคับเลือกก่อนบันทึก
   const [category, setCategory] = useState<EventCategory | "">("");
   const [formError, setFormError] = useState("");
+  // วันเวลาต่ำสุดที่เลือกได้ในปฏิทิน (= ตอนเปิดหน้าต่าง) กันเลือกวันย้อนหลัง
+  const [minStart, setMinStart] = useState("");
   // ข้อความแดงของตาราง เช่น เปลี่ยนสถานะไม่สำเร็จ (แยกจาก formError ของหน้าต่าง)
   const [error, setError] = useState("");
 
@@ -54,6 +56,7 @@ export default function OrganizerEventsPage() {
     setLocation("");
     setCategory("");
     setFormError("");
+    setMinStart(toInputValue(new Date().toISOString()));
   }
 
   function openEdit(ev: EventItem) {
@@ -65,12 +68,13 @@ export default function OrganizerEventsPage() {
     // งานเก่าที่สร้างก่อนมีหมวดหมู่จะเป็นค่าว่าง ต้องเลือกใหม่ก่อนบันทึก
     setCategory(ev.category ?? "");
     setFormError("");
+    setMinStart(toInputValue(new Date().toISOString()));
   }
 
   function handleSave() {
     if (editing === null || organizerId === "") return;
 
-    // saveEvent ตรวจแค่ชื่อว่าง ส่วนวันเวลากับสถานที่ตรวจที่หน้านี้
+    // saveEvent ตรวจชื่อว่าง + วันย้อนหลัง ส่วนช่องว่างอื่น ๆ ตรวจที่หน้านี้
     const start = new Date(startAt);
     if (startAt === "" || Number.isNaN(start.getTime())) {
       setFormError("กรุณาเลือกวันเวลาเริ่มงาน");
@@ -170,7 +174,9 @@ export default function OrganizerEventsPage() {
                   <td className="py-2 pr-4">
                     <Badge tone={ev.status === "published" ? "green" : "gray"}>
                       {STATUS_LABEL[ev.status]}
-                    </Badge>
+                    </Badge>{" "}
+                    {/* เลยวันจัดแล้ว ระบบปิดขายให้อัตโนมัติ */}
+                    {isEventOver(ev) && <Badge tone="red">จบแล้ว</Badge>}
                   </td>
                   <td className="py-2 text-right">
                     <div className="flex justify-end gap-2">
@@ -260,6 +266,7 @@ export default function OrganizerEventsPage() {
           <Input
             label="วันเวลาเริ่มงาน"
             type="datetime-local"
+            min={minStart}
             value={startAt}
             onChange={(e) => setStartAt(e.target.value)}
           />
@@ -301,4 +308,4 @@ export default function OrganizerEventsPage() {
       </Modal>
     </div>
   );
-}
+}

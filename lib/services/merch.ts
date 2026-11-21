@@ -13,6 +13,8 @@ import type {
   ShippingStatus,
 } from "../types";
 import { generateId, nowISO, readStore, updateStore } from "../storage";
+import { logAction } from "./audit";
+import { isEventOver } from "./events";
 
 export function listProducts(eventId: ID): MerchProduct[] {
  
@@ -58,6 +60,7 @@ export function saveProduct(product: MerchProduct): MerchProduct {
     updateStore("merchProducts", (list) =>
       list.map((p) => (p.id === clean.id ? { ...p, ...clean } : p)),
     );
+    logAction({ action: "merch.product", targetId: clean.id, detail: `แก้ไขสินค้า ${clean.name}` });
     return clean;
   }
 
@@ -67,6 +70,7 @@ export function saveProduct(product: MerchProduct): MerchProduct {
     createdAt: nowISO(),
   };
   updateStore("merchProducts", (list) => [...list, created]);
+  logAction({ action: "merch.product", targetId: created.id, detail: `เพิ่มสินค้า ${created.name}` });
   return created;
 }
 
@@ -84,12 +88,14 @@ export function deleteProduct(productId: ID): void {
     updateStore("merchProducts", (list) =>
       list.map((p) => (p.id === productId ? { ...p, active: false } : p)),
     );
+    logAction({ action: "merch.product", targetId: productId, detail: `ปิดขายสินค้า ${product.name} (เคยขายแล้ว ลบไม่ได้)` });
     return;
   }
 
   updateStore("merchProducts", (list) =>
     list.filter((p) => p.id !== productId),
   );
+  logAction({ action: "merch.product", targetId: productId, detail: `ลบสินค้า ${product.name}` });
 }
 
 /** เช็กตะกร้า แล้วคืนรายการที่ใช้ราคาจริงจากระบบ (ไม่เชื่อราคาที่หน้าเว็บส่งมา) */
@@ -133,6 +139,11 @@ export function createOnlineOrder(input: {
 
   if (shippingAddress.trim() === "") {
     throw new Error("กรุณากรอกที่อยู่จัดส่ง");
+  }
+  // ขายออนไลน์ถึงวันจัดงานเท่านั้น (ขายหน้าบูธ recordBoothSale ไม่ติดเงื่อนไขนี้)
+  const event = readStore("events").find((e) => e.id === eventId);
+  if (event && isEventOver(event)) {
+    throw new Error("งานนี้เลยวันจัดแล้ว ปิดการขายของที่ระลึกออนไลน์");
   }
   const checked = checkItems(eventId, items);
   const total = checked.reduce(
@@ -211,6 +222,12 @@ export function confirmOnlinePayment(orderId: ID): MerchOrder {
     list.map((o) => (o.id === orderId ? paid : o)),
   );
 
+  logAction({
+    actorId: order.customerId ?? undefined,
+    action: "merch.purchase",
+    targetId: order.id,
+    detail: `สั่งซื้อของที่ระลึกออนไลน์ ${order.items.length} รายการ (${order.total} บาท)`,
+  });
   return paid;
 }
 
@@ -258,8 +275,22 @@ export function recordBoothSale(input: {
   };
   updateStore("merchOrders", (list) => [...list, order]);
 
+  logAction({
+    action: "merch.booth_sale",
+    targetId: order.id,
+    detail: `ขายหน้าบูธ ${order.items.length} รายการ (${order.total} บาท, ${order.paymentMethod === "cash" ? "เงินสด" : "QR"})`,
+  });
   return order;
 }
+
+// ชื่อสถานะจัดส่งภาษาไทย ใช้เขียนรายละเอียดใน Audit Log
+const SHIPPING_TH: Record<ShippingStatus, string> = {
+  pending: "รอดำเนินการ",
+  preparing: "กำลังเตรียม",
+  shipped: "จัดส่งแล้ว",
+  delivered: "ได้รับแล้ว",
+  cancelled: "ยกเลิก",
+};
 
 export function updateShipping(
   orderId: ID,
@@ -286,6 +317,7 @@ export function updateShipping(
     list.map((o) => (o.id === orderId ? updated : o)),
   );
 
+  logAction({ action: "merch.shipping", targetId: orderId, detail: `อัปเดตการจัดส่ง ${orderId} → ${SHIPPING_TH[status]}${trackingNo ? ` (เลขพัสดุ ${trackingNo})` : ""}` });
   return updated;
 }
 

@@ -80,8 +80,13 @@ export function requestWithdrawal(input: {
     requestedAt: nowISO(),
   };
   updateStore("withdrawals", (list) => [withdrawal, ...list]); // ใหม่อยู่บนสุด
+  logAction({
+    actorId: vendor.userId,
+    action: "withdrawal.request",
+    targetId: withdrawal.id,
+    detail: `${vendor.shopName} ขอถอน ${input.amount} Token`,
+  });
   return withdrawal;
-  // ไม่เรียก logAction: Audit Log ใช้เก็บสิ่งที่ Admin ทำ ส่วนการขอถอนเป็นของร้าน และคำขอเองก็เป็นหลักฐานอยู่แล้ว (มี requestedAt)
 }
 
 /** คำขอของร้านนี้ทั้งหมด ล่าสุดขึ้นก่อน (ใช้ในหน้า /vendor/withdraw) */
