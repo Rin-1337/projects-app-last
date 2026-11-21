@@ -6,7 +6,7 @@ import { formatEventDate } from "@/components/customer/common/formatEventDate";
 import { QRDisplay } from "@/components/shared/QRDisplay";
 import { Button, Modal } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
-import { topupOnline } from "@/lib/services/wallet";
+import { MAX_TOPUP, topupOnline } from "@/lib/services/wallet";
 import type { TokenTransaction } from "@/lib/types";
 import { useStore } from "@/lib/useStore";
 
@@ -75,13 +75,19 @@ export default function CustomerWalletPage() {
   // ───── จำนวนที่เลือก ─────
   // Token ต้องเป็นจำนวนเต็มมากกว่า 0 (1 Token = 1 บาท ไม่มีเศษสตางค์)
   const selectedAmount = Number(amountText);
-  const isValidAmount = Number.isInteger(selectedAmount) && selectedAmount > 0;
+  const isValidAmount = Number.isInteger(selectedAmount) && selectedAmount > 0 && selectedAmount <= MAX_TOPUP;
+  // กรอกเกินเพดาน → บอกทันทีที่ปุ่ม ไม่ต้องรอเปิดหน้าต่าง QR
+  const isOverLimit = selectedAmount > MAX_TOPUP;
 
   /** เปิดหน้าต่าง QR เมื่อจำนวนถูกต้อง */
   function openTopup(amount: number) {
     // Token ต้องเป็นจำนวนเต็มมากกว่า 0 (1 Token = 1 บาท ไม่มีเศษสตางค์)
     if (!Number.isInteger(amount) || amount <= 0) {
       setErrorMessage("กรุณากรอกจำนวนเต็มมากกว่า 0");
+      return;
+    }
+    if (amount > MAX_TOPUP) {
+      setErrorMessage(`เติมได้สูงสุดครั้งละ ${MAX_TOPUP.toLocaleString()} Token`);
       return;
     }
     setErrorMessage("");
@@ -199,11 +205,12 @@ export default function CustomerWalletPage() {
             </div>
 
             <label className="flex max-w-xs flex-col gap-1.5">
-              <span className="text-[13px] text-base-content/60">หรือกรอกจำนวนเอง</span>
+              <span className="text-[13px] text-base-content/60">หรือกรอกจำนวนเอง (สูงสุดครั้งละ {MAX_TOPUP.toLocaleString()} Token)</span>
               <input
                 className="input w-full border-0 bg-base-300 px-5"
                 type="number"
                 min={1}
+                max={MAX_TOPUP}
                 step={1}
                 value={amountText}
                 onChange={(event) => setAmountText(event.target.value)}
@@ -215,7 +222,9 @@ export default function CustomerWalletPage() {
             <button type="submit" className="btn btn-primary btn-block h-14 text-base font-normal" disabled={!isValidAmount}>
               {isValidAmount
                 ? `เติม ${selectedAmount.toLocaleString()} Token · ${selectedAmount.toLocaleString()} บาท`
-                : "เลือกจำนวนที่จะเติม"}
+                : isOverLimit
+                  ? `เติมได้สูงสุดครั้งละ ${MAX_TOPUP.toLocaleString()} Token`
+                  : "เลือกจำนวนที่จะเติม"}
             </button>
           </form>
 

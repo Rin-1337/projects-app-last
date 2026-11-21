@@ -5,17 +5,22 @@
  * ═══════════════════════════════════════════════════════════════════════
  *
  * ไฟล์นี้ทำอะไร
- *   จดว่า "Admin คนไหน ทำอะไร กับใคร/อะไร เมื่อไหร่" ทุกครั้งที่ Admin ทำรายการสำคัญ
- *   ตาม requirement: "ตรวจสอบประวัติการดำเนินงานของผู้ดูแลระบบ"
+ *   จดว่า "ใคร ทำอะไร กับใคร/อะไร เมื่อไหร่" ทุก role ทั้งเว็บ
+ *   (ล็อกอิน/ออก, เติมเงิน, ซื้อบัตร, เช็กอิน, ขายของ, ถอนเงิน, งานของ Admin ฯลฯ)
+ *   ให้ Admin ตรวจสอบย้อนหลังได้ที่หน้า /admin/audit-logs
  *
  * ข้อมูลที่ไฟล์นี้ดูแล
  *   auditLogs  [{ id, actorId, action, targetId?, detail?, createdAt }]
  *
  * ใครเรียก logAction
- *   users.ts    → สร้างบัญชี (user.create), ระงับ/เปิดใช้ (user.suspend / user.activate)
- *   wallet.ts   → เติม Token หน้างาน (wallet.topup)
- *   vendors.ts  → สร้างร้าน (vendor.create), แก้ราคา/ข้อมูลร้าน (vendor.update)
- *   withdrawals.ts (ต่อไป) → อนุมัติ/ปฏิเสธ/บันทึกโอน
+ *   auth.tsx       → ล็อกอิน/ล็อกอินไม่ผ่าน/ออกจากระบบ/สมัคร/แก้โปรไฟล์/เปลี่ยนรหัส (auth.*)
+ *   users.ts       → สร้างบัญชี, ระงับ/เปิดใช้ (user.*)
+ *   wallet.ts      → เติม Token ออนไลน์/หน้างาน (wallet.*)
+ *   tickets.ts     → ซื้อบัตร, เช็กอิน (ticket.*)
+ *   events.ts      → สร้าง/แก้งาน, ประเภทบัตร (event.*)
+ *   merch.ts       → สินค้า, สั่งซื้อ, ขายหน้าบูธ, จัดส่ง (merch.*)
+ *   vendors.ts     → สร้าง/แก้ร้าน, ขายให้ลูกค้า, บัญชีธนาคาร (vendor.*)
+ *   withdrawals.ts → ขอถอน/อนุมัติ/ปฏิเสธ/บันทึกโอน (withdrawal.*)
  * ใครอ่าน: หน้า /admin/audit-logs
  *
  * ถาม: Audit Log ต่างจาก tokenTransactions ใน wallet.ts ยังไง
@@ -47,12 +52,14 @@ import { generateId, nowISO, readStore, updateStore } from "../storage";
  * เพราะไฟล์อื่นต้องเรียกใช้ ส่วน addTransaction เป็นของใช้ภายใน wallet.ts เท่านั้น
  */
 export function logAction(input: {
-  actorId: ID;
+  actorId?: ID;
   action: string;
   targetId?: ID;
   detail?: string;
 }): AuditLog {
-  const log: AuditLog = { ...input, id: generateId("log"), createdAt: nowISO() };
+  // ไม่ส่ง actorId มา → ใช้คนที่ล็อกอินอยู่ (ไม่มีใครล็อกอิน = "system")
+  const actorId = input.actorId ?? readStore("session")?.userId ?? "system";
+  const log: AuditLog = { ...input, actorId, id: generateId("log"), createdAt: nowISO() };
   updateStore("auditLogs", (logs) => [log, ...logs]);
   return log;
 }

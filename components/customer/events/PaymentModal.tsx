@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { QRDisplay } from "@/components/shared/QRDisplay";
 import { Button, Modal } from "@/components/ui";
-import { confirmTicketPayment } from "@/lib/services/tickets";
+import { cancelTicketOrder, confirmTicketPayment } from "@/lib/services/tickets";
 import type { Ticket, TicketOrder } from "@/lib/types";
 
 /**
@@ -31,8 +31,14 @@ export function PaymentModal({
     }
   }
 
+  // ปิดหน้าต่างโดยไม่จ่าย → ยกเลิกคำสั่งซื้อ (ไม่ให้ค้าง "รอชำระเงิน")
+  function handleCancel() {
+    cancelTicketOrder(order.id);
+    onCancel();
+  }
+
   return (
-    <Modal open onClose={onCancel} title="ชำระเงินด้วย QR">
+    <Modal open onClose={handleCancel} title="ชำระเงินด้วย QR">
       <div className="space-y-5">
         <QRDisplay value={`PAY:${order.id}`} size={180} label="สแกนเพื่อชำระเงิน" />
 
@@ -46,7 +52,7 @@ export function PaymentModal({
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <div className="flex gap-3">
-          <Button variant="secondary" className="flex-1" onClick={onCancel}>
+          <Button variant="secondary" className="flex-1" onClick={handleCancel}>
             ยกเลิก
           </Button>
           <Button className="flex-1" onClick={handlePay}>

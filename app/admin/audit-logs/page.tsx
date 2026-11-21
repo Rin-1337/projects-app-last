@@ -3,97 +3,103 @@
 import { useState } from "react";
 import { useStore } from "@/lib/useStore";
 import { Badge, Button, Card, CardTitle, Input } from "@/components/ui";
+import type { Role } from "@/lib/types";
+import { ACTION_LABEL, GROUPS, ROLE_LABEL, actionTone } from "./labels";
 
-// แปลงชื่อ action ในระบบ → ภาษาไทย (ครบทุกตัวที่ logAction ใช้อยู่)
-const ACTION_LABEL: Record<string, string> = {
-  "user.create": "สร้างบัญชี",
-  "user.suspend": "ระงับบัญชี",
-  "user.activate": "เปิดใช้บัญชี",
-  "vendor.create": "สร้างร้าน",
-  "vendor.update": "แก้ไขร้าน",
-  "wallet.topup": "เติม Token หน้างาน",
-  "withdrawal.approve": "อนุมัติถอนเงิน",
-  "withdrawal.reject": "ไม่อนุมัติถอนเงิน",
-  "withdrawal.transfer": "บันทึกการโอน",
-  "event.assign": "กำหนด Organizer",
-};
-// ปุ่มกรองหมวด (key = คำหน้าจุดของ action เช่น "vendor.update" → "vendor")
-const GROUPS = [
-  { key: "all", label: "ทั้งหมด" },
-  { key: "user", label: "บัญชี" },
+// ปุ่มกรองตาม role ของคนที่ทำ
+const ROLES: { key: Role | "all"; label: string }[] = [
+  { key: "all", label: "ทุกคน" },
+  { key: "customer", label: "ลูกค้า" },
   { key: "vendor", label: "ร้านค้า" },
-  { key: "wallet", label: "เติม Token" },
-  { key: "withdrawal", label: "ถอนเงิน" },
-  { key: "event", label: "Event" },
+  { key: "organizer", label: "Organizer" },
+  { key: "admin", label: "Admin" },
 ];
 
+// ผู้รับผิดชอบ: นัฐวิ
+// แสดงการกระทำของทุกคนทั้งเว็บ (ใคร ทำอะไร เมื่อไหร่) — ข้อมูลมาจาก logAction ใน lib/services
 export default function AdminAuditLogsPage() {
   const logs = useStore("auditLogs");
   const users = useStore("users");
   const [group, setGroup] = useState("all");
+  const [role, setRole] = useState<Role | "all">("all");
   const [search, setSearch] = useState("");
 
-  // หาชื่อคนทำรายการ (ไม่เจอ → โชว์ id)
-  function nameOf(id: string) {
-    return users.find((u) => u.id === id)?.name ?? id;
+  // หาคนทำรายการจาก id (ไม่เจอ เช่น "system" → แสดง id ตรง ๆ)
+  function userOf(id: string) {
+    return users.find((u) => u.id === id);
   }
 
   const keyword = search.trim().toLowerCase();
-  // กรองหมวด → กรองคำค้น (ค้นทั้งรายละเอียดและชื่อคนทำ) → ใหม่สุดก่อน
+  // กรองหมวด → กรอง role → กรองคำค้น (ชื่อ / อีเมล / รายละเอียด) → ใหม่สุดก่อน
   const shown = logs
     .filter((log) => group === "all" || log.action.startsWith(`${group}.`))
-    .filter(
-      (log) =>
-        !keyword ||
-        `${log.detail ?? ""} ${nameOf(log.actorId)}`
-          .toLowerCase()
-          .includes(keyword),
-    )
+    .filter((log) => role === "all" || userOf(log.actorId)?.role === role)
+    .filter((log) => {
+      if (!keyword) return true;
+      const user = userOf(log.actorId);
+      const text = `${log.detail ?? ""} ${user?.name ?? log.actorId} ${user?.email ?? ""} ${ACTION_LABEL[log.action] ?? log.action}`;
+      return text.toLowerCase().includes(keyword);
+    })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   return (
     <Card>
       <CardTitle>Audit Logs ({shown.length})</CardTitle>
-      <div className="mt-3 flex flex-wrap items-end gap-2">
+      <p className="-mt-2 text-sm text-slate-500">ประวัติการใช้งานของทุกคนในระบบ ใครทำอะไร เมื่อไหร่ (แก้ไขหรือลบย้อนหลังไม่ได้)</p>
+
+      {/* กรองตามหมวด */}
+      <div className="mt-4 flex flex-wrap gap-2">
         {GROUPS.map((g) => (
-          <Button
-            key={g.key}
-            size="sm"
-            variant={group === g.key ? "primary" : "secondary"}
-            onClick={() => setGroup(g.key)}
-          >
+          <Button key={g.key} size="sm" variant={group === g.key ? "primary" : "secondary"} onClick={() => setGroup(g.key)}>
             {g.label}
           </Button>
         ))}
-        <Input
-          label="ค้นหา"
-          placeholder="ชื่อร้าน / ชื่อคน / รายละเอียด"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
       </div>
+
+      {/* กรองตาม role + ค้นหา */}
+      <div className="mt-3 flex flex-wrap items-end gap-2">
+        {ROLES.map((r) => (
+          <Button key={r.key} size="sm" variant={role === r.key ? "primary" : "ghost"} onClick={() => setRole(r.key)}>
+            {r.label}
+          </Button>
+        ))}
+        <Input label="ค้นหา" placeholder="ชื่อ / อีเมล / รายละเอียด" value={search} onChange={(e) => setSearch(e.target.value)} />
+      </div>
+
       {shown.length === 0 ? (
         <p className="mt-4 text-sm text-slate-500">ไม่มีรายการ</p>
       ) : (
-        <ul className="mt-4 divide-y divide-slate-100">
-          {shown.map((log) => (
-            <li key={log.id} className="py-3">
-              <div className="flex flex-wrap items-center gap-2">
-                {/* ถ้าเจอ action ใหม่ที่ยังไม่มีในตาราง → โชว์ชื่ออังกฤษไปก่อน */}
-                <Badge tone="blue">
-                  {ACTION_LABEL[log.action] ?? log.action}
-                </Badge>
-                <p className="text-sm text-slate-600">
-                  {new Date(log.createdAt).toLocaleString("th-TH")} · โดย{" "}
-                  {nameOf(log.actorId)}
-                </p>
-              </div>
-              {log.detail && (
-                <p className="mt-1 text-slate-900">{log.detail}</p>
-              )}
-            </li>
-          ))}
-        </ul>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b border-slate-200 text-slate-500">
+              <tr>
+                <th className="py-2 pr-4 font-medium">เวลา</th>
+                <th className="py-2 pr-4 font-medium">ผู้ทำรายการ</th>
+                <th className="py-2 pr-4 font-medium">การกระทำ</th>
+                <th className="py-2 font-medium">รายละเอียด</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {shown.map((log) => {
+                const user = userOf(log.actorId);
+                return (
+                  <tr key={log.id} className="align-top">
+                    <td className="whitespace-nowrap py-2 pr-4 text-slate-500">{new Date(log.createdAt).toLocaleString("th-TH")}</td>
+                    <td className="py-2 pr-4">
+                      <p className="font-medium text-slate-900">{user?.name ?? log.actorId}</p>
+                      {user && <p className="text-xs text-slate-500">{ROLE_LABEL[user.role]} · {user.email}</p>}
+                    </td>
+                    <td className="whitespace-nowrap py-2 pr-4">
+                      {/* action ใหม่ที่ยังไม่มีในตาราง → แสดงชื่ออังกฤษไปก่อน */}
+                      <Badge tone={actionTone(log.action)}>{ACTION_LABEL[log.action] ?? log.action}</Badge>
+                    </td>
+                    <td className="py-2 text-slate-700">{log.detail ?? "-"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </Card>
   );

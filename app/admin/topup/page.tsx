@@ -23,7 +23,7 @@ import { Button, Card, CardTitle, Input } from "@/components/ui";
 import { findCustomerByCode } from "@/lib/services/users";
 import type { User } from "@/lib/types";
 import { useStore } from "@/lib/useStore";
-import { topupOnsite } from "@/lib/services/wallet";
+import { MAX_TOPUP, topupOnsite } from "@/lib/services/wallet";
 
 export default function AdminTopupPage() {
   /* ───────────── state: ค่าที่หน้าเว็บต้องจำ ─────────────
@@ -212,9 +212,10 @@ export default function AdminTopupPage() {
                   min/step → เบราว์เซอร์ไม่ยอมส่งฟอร์มถ้าเป็น 0 หรือทศนิยม
                   (เป็นด่านแรก ด่านจริงคือ assertValidAmount ใน wallet.ts) */}
               <Input
-                label="จำนวนเงิน (บาท) = จำนวน Token"
+                label={`จำนวนเงิน (บาท) = จำนวน Token · สูงสุดครั้งละ ${MAX_TOPUP.toLocaleString()}`}
                 type="number"
                 min={1}
+                max={MAX_TOPUP}
                 step={1}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}

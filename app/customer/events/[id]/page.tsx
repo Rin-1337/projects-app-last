@@ -9,6 +9,7 @@ import { formatEventDate } from "@/components/customer/common/formatEventDate";
 import { PaymentModal } from "@/components/customer/events/PaymentModal";
 import type { Ticket, TicketOrder } from "@/lib/types";
 import { useStore } from "@/lib/useStore";
+import { isEventOver } from "@/lib/services/events";
 
 // หน้ารายละเอียด Event + ซื้อบัตร — ผู้รับผิดชอบ: ทิวากร
 //
@@ -42,7 +43,8 @@ function EventDetail() {
   // tickets = บัตรที่เพิ่งได้หลังจ่ายเงิน (มีค่า = ซื้อสำเร็จ)
   const [tickets, setTickets] = useState<Ticket[] | null>(null);
 
-  const event = events.find((e) => e.id === id && e.status === "published");
+  // งานที่เลยวันจัดแล้วถือว่าปิดขาย (ซื้อบัตรไม่ได้)
+  const event = events.find((e) => e.id === id && e.status === "published" && !isEventOver(e));
   const ticketTypes = allTicketTypes.filter((t) => t.eventId === id);
 
   if (!event) {

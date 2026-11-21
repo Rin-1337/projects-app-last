@@ -6,6 +6,19 @@
  * ทิวากร (Customer) เรียก createTicketOrder / confirmTicketPayment / listTicketsByCustomer
  */
 import { generateId, nowISO, readStore, updateStore } from "../storage";
+import { logAction } from "./audit";
+import { isEventOver } from "./events";
+
+/** เช็กว่างานยังขายบัตรได้ไหม (มีอยู่จริง + เปิดขาย + ยังไม่เลยวันจัด) — ไม่ได้ก็ throw */
+function assertEventOnSale(eventId: ID) {
+  const event = readStore("events").find((e) => e.id === eventId);
+  if (!event || event.status !== "published") {
+    throw new Error("งานนี้ไม่ได้เปิดขายบัตร");
+  }
+  if (isEventOver(event)) {
+    throw new Error("งานนี้เลยวันจัดแล้ว ปิดการขายบัตร");
+  }
+}
 import type { ID, Ticket, TicketOrder } from "../types";
 
 /**
@@ -24,6 +37,7 @@ export function createTicketOrder(input: {
   if (!ticketType) {
     throw new Error("ไม่พบประเภทบัตรนี้");
   }
+  assertEventOnSale(ticketType.eventId);
 
   const remaining = ticketType.quota - ticketType.sold;
   if (!Number.isInteger(input.quantity) || input.quantity < 1) {
@@ -68,6 +82,8 @@ export function confirmTicketPayment(orderId: ID): Ticket[] {
   if (order.paymentStatus !== "pending") {
     throw new Error("คำสั่งซื้อนี้ไม่ได้อยู่ในสถานะรอชำระเงิน");
   }
+  // เผื่อเปิดหน้าจ่ายเงินค้างไว้จนเลยวันจัด
+  assertEventOnSale(order.eventId);
 
   const ticketType = readStore("ticketTypes").find((t) => t.id === order.ticketTypeId);
   if (!ticketType || ticketType.quota - ticketType.sold < order.quantity) {
@@ -97,6 +113,13 @@ export function confirmTicketPayment(orderId: ID): Ticket[] {
   );
   updateStore("tickets", (current) => [...current, ...tickets]);
 
+  const eventTitle = readStore("events").find((e) => e.id === order.eventId)?.title ?? order.eventId;
+  logAction({
+    actorId: order.customerId,
+    action: "ticket.purchase",
+    targetId: order.id,
+    detail: `ซื้อบัตร ${eventTitle} · ${ticketType.name} ×${order.quantity} (${order.total} บาท)`,
+  });
   return tickets;
 }
 
@@ -106,6 +129,22 @@ export function listTicketsByCustomer(customerId: ID): Ticket[] {
 
 export function listOrdersByEvent(eventId: ID): TicketOrder[] {
     return readStore("ticketOrders").filter((order) => order.eventId === eventId);
+}
+
+/**
+ * cancelTicketOrder — ยกเลิกคำสั่งซื้อที่ยังไม่จ่าย (ลูกค้าปิดหน้าต่าง QR โดยไม่จ่าย)
+ * ไม่ยกเลิกแบบนี้ คำสั่งซื้อจะค้าง "รอชำระเงิน" ตลอดไป เพราะหน้าบัตรของฉันไม่มีปุ่มจ่ายต่อ
+ * คำสั่งซื้อที่จ่ายแล้วไม่ถูกแตะ
+ */
+export function cancelTicketOrder(orderId: ID): void {
+  const order = readStore("ticketOrders").find((o) => o.id === orderId);
+  if (!order || order.paymentStatus !== "pending") {
+    return;
+  }
+  updateStore("ticketOrders", (orders) =>
+    orders.map((o) => (o.id === orderId ? { ...o, paymentStatus: "cancelled" } : o)),
+  );
+  logAction({ actorId: order.customerId, action: "ticket.cancel", targetId: orderId, detail: "ปิดหน้าต่างชำระเงินโดยไม่จ่าย" });
 }
 
 /** สแกน QR บัตร → คืนผลว่าเช็กอินได้หรือไม่ */
@@ -131,5 +170,7 @@ export function checkIn(
   updateStore("tickets", (current) =>
     current.map((t) => (t.id === updated.id ? updated : t)),
   );
+  // ไม่ส่ง actorId → logAction ใช้ Organizer ที่ล็อกอินอยู่
+  logAction({ action: "ticket.checkin", targetId: ticket.id, detail: `เช็กอิน ${ticket.attendeeName} (${ticket.id})` });
   return { ok: true, ticket: updated };
 }

@@ -14,6 +14,7 @@
  *   useStore ทำให้ทุกหน้าเห็นข้อมูลล่าสุดอยู่แล้ว จึงไม่ต้องสร้าง Provider เพิ่ม
  */
 
+import { logAction } from "./services/audit";
 import { findUserByEmail, registerCustomer } from "./services/users";
 import { readStore, updateStore, writeStore } from "./storage";
 import type { Role, Session, User } from "./types";
@@ -44,20 +45,31 @@ function login(email: string, password: string): LoginResult {
 
   // ใช้ข้อความเดียวกันทั้งสองกรณี จะได้ไม่บอกใบ้ว่าอีเมลนี้มีในระบบหรือไม่
   if (!user || user.password !== password) {
+    // อีเมลมีในระบบแต่รหัสผิด → จดไว้ให้ Admin เห็น (อีเมลที่ไม่มีในระบบไม่มีเจ้าของ จึงไม่จด)
+    if (user) {
+      logAction({ actorId: user.id, action: "auth.login_failed", detail: "ใส่รหัสผ่านผิด" });
+    }
     return { ok: false, reason: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" };
   }
 
   if (user.status === "suspended") {
+    logAction({ actorId: user.id, action: "auth.login_failed", detail: "บัญชีถูกระงับ" });
     return { ok: false, reason: "บัญชีนี้ถูกระงับ กรุณาติดต่อผู้ดูแลระบบ" };
   }
 
   // จำไว้ว่าใครล็อกอินอยู่
   writeStore("session", { userId: user.id, role: user.role });
+  logAction({ actorId: user.id, action: "auth.login" });
   return { ok: true, user };
 }
 
 /** logout — ออกจากระบบ (RoleGuard จะพากลับไปหน้า login เอง) */
 function logout() {
+  // จด log ก่อนล้าง session (ล้างแล้วจะไม่รู้ว่าใครออก)
+  const session = readStore("session");
+  if (session) {
+    logAction({ actorId: session.userId, action: "auth.logout" });
+  }
   writeStore("session", null);
 }
 
@@ -71,6 +83,7 @@ function register(input: RegisterInput) {
   if (result.ok) {
     // จำไว้ว่าใครล็อกอินอยู่
     writeStore("session", { userId: result.user.id, role: result.user.role });
+    logAction({ actorId: result.user.id, action: "auth.register", detail: `สมัครสมาชิก (${result.user.email})` });
   }
 
   return result;
@@ -110,6 +123,7 @@ function updateProfile(userId: string, name: string, phone: string): UpdateResul
       return { ...u, name: newName, phone: phoneToSave };
     }),
   );
+  logAction({ actorId: userId, action: "auth.profile", detail: "แก้ไขข้อมูลส่วนตัว" });
   return { ok: true };
 }
 
@@ -138,6 +152,7 @@ function changePassword(userId: string, currentPassword: string, newPassword: st
       return { ...u, password: newPassword };
     }),
   );
+  logAction({ actorId: userId, action: "auth.password", detail: "เปลี่ยนรหัสผ่าน" });
   return { ok: true };
 }
 

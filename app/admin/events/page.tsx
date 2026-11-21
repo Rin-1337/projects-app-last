@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useStore } from "@/lib/useStore";
 import { Badge, Card, CardTitle } from "@/components/ui";
-import { saveEvent } from "@/lib/services/events";
+import { isEventOver, saveEvent } from "@/lib/services/events";
 import { logAction } from "@/lib/services/audit";
 import type { EventItem, EventStatus } from "@/lib/types";
 
@@ -66,6 +66,7 @@ export default function AdminEventsPage() {
                   <div className="flex items-center gap-2">
                     <p className="font-medium text-slate-900">{ev.title}</p>
                     <Badge tone={STATUS_COLOR[ev.status]}>{STATUS_LABEL[ev.status]}</Badge>
+                    {isEventOver(ev) && <Badge tone="red">จบแล้ว</Badge>}
                   </div>
                   <p className="mt-1 text-sm text-slate-600">{new Date(ev.startAt).toLocaleString("th-TH")} · {ev.location}</p>
                   <p className="text-sm text-slate-600">ขายบัตรแล้ว {soldOf(ev.id).toLocaleString()} ใบ</p>
