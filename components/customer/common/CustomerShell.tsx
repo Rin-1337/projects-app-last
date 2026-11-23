@@ -3,7 +3,7 @@
 import { IBM_Plex_Sans_Thai, Inter } from "next/font/google";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Suspense, type ReactNode } from "react";
+import { Suspense, useState, type ReactNode } from "react";
 import type { NavItem } from "@/components/shared/RoleNav";
 import { useAuth } from "@/lib/auth";
 import { useStore } from "@/lib/useStore";
@@ -74,32 +74,147 @@ function findActiveHref(nav: NavItem[], pathname: string) {
 
 function Header({ nav, pathname }: { nav: NavItem[]; pathname: string }) {
   const activeHref = findActiveHref(nav, pathname);
+  // เมนูบนมือถือเปิดอยู่หรือไม่ (PC ไม่ใช้)
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 px-5 py-5 sm:px-10">
-      <Link href="/" className="text-[19px] font-semibold tracking-[-0.03em]">
-        eventhub
-      </Link>
+    <header className="px-5 py-5 sm:px-10">
+      <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3">
+        <Link href="/" className="text-[19px] font-semibold tracking-[-0.03em]">
+          eventhub
+        </Link>
 
-      <div className="flex flex-wrap items-center gap-6">
-        <nav aria-label="เมนูหลัก" className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-          {nav.map((item) => {
-            const isActive = item.href === activeHref;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                className={isActive ? "font-medium" : "text-base-content/70 hover:text-base-content"}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-        <HeaderAccount />
+        {/* จอ PC (md ขึ้นไป): เมนู + บัญชี แบบเดิม — บนมือถือซ่อนไว้ */}
+        <div className="hidden flex-wrap items-center gap-6 md:flex">
+          <nav aria-label="เมนูหลัก" className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            {nav.map((item) => {
+              const isActive = item.href === activeHref;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={isActive ? "font-medium" : "text-base-content/70 hover:text-base-content"}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+          <HeaderAccount />
+        </div>
+
+        {/* มือถือ: ปุ่ม ☰ — บน PC ซ่อนไว้ */}
+        <button
+          type="button"
+          aria-label={isMenuOpen ? "ปิดเมนู" : "เปิดเมนู"}
+          aria-expanded={isMenuOpen}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="btn btn-ghost btn-square md:hidden"
+        >
+          {isMenuOpen ? <CloseIcon /> : <MenuIcon />}
+        </button>
       </div>
+
+      {isMenuOpen && <MobileMenu nav={nav} activeHref={activeHref} onClose={() => setIsMenuOpen(false)} />}
     </header>
+  );
+}
+
+/** เมนูบนมือถือ: แสดงเมื่อกดปุ่ม ☰ กดลิงก์ไหนแล้วปิดเมนูเอง */
+function MobileMenu({ nav, activeHref, onClose }: { nav: NavItem[]; activeHref: string; onClose: () => void }) {
+  return (
+    <div className="mt-4 border-t border-base-300 pt-3 md:hidden">
+      <nav aria-label="เมนูหลัก (มือถือ)" className="flex flex-col">
+        {nav.map((item) => {
+          const isActive = item.href === activeHref;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onClose}
+              aria-current={isActive ? "page" : undefined}
+              className={isActive ? "rounded-lg bg-base-200 px-3 py-3 font-medium" : "rounded-lg px-3 py-3 text-base-content/70"}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+      <div className="mt-3 border-t border-base-300 pt-4">
+        <MobileAccount onClose={onClose} />
+      </div>
+    </div>
+  );
+}
+
+/** ส่วนบัญชีในเมนูมือถือ (logic เดียวกับ HeaderAccount แต่ปุ่มเต็มความกว้าง) */
+function MobileAccount({ onClose }: { onClose: () => void }) {
+  const { user, logout } = useAuth();
+  const wallets = useStore("wallets");
+  const isClient = useIsClient();
+
+  // ยังไม่รู้ว่าใครล็อกอินอยู่ ไม่แสดงอะไรไปก่อน
+  if (!isClient) {
+    return null;
+  }
+
+  if (!user) {
+    return (
+      <div className="flex flex-col gap-2">
+        <Link href="/login" onClick={onClose} className="btn btn-neutral h-11 w-full font-normal">
+          เข้าสู่ระบบ
+        </Link>
+        <Link href="/register" onClick={onClose} className="btn h-11 w-full bg-base-200 font-normal">
+          สมัครสมาชิก
+        </Link>
+      </div>
+    );
+  }
+
+  // ยังไม่เคยเติม Token = ยังไม่มีกระเป๋า = 0
+  const balance = wallets.find((wallet) => wallet.userId === user.id)?.balance ?? 0;
+
+  function handleLogout() {
+    onClose();
+    logout();
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Link
+        href="/customer/wallet"
+        onClick={onClose}
+        className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-base-200 px-4.5 text-sm"
+      >
+        <WalletIcon />
+        {balance.toLocaleString()} Token
+      </Link>
+      <button type="button" onClick={handleLogout} className="btn btn-ghost h-11 w-full font-normal text-base-content/70">
+        ออกจากระบบ
+      </button>
+    </div>
+  );
+}
+
+/** ไอคอน ☰ (เปิดเมนู) — รูปจาก Tabler Icons */
+function MenuIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 6l16 0" />
+      <path d="M4 12l16 0" />
+      <path d="M4 18l16 0" />
+    </svg>
+  );
+}
+
+/** ไอคอน ✕ (ปิดเมนู) — รูปจาก Tabler Icons */
+function CloseIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 6l-12 12" />
+      <path d="M6 6l12 12" />
+    </svg>
   );
 }
 

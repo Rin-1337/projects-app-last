@@ -100,7 +100,8 @@ export default function CustomerEventsPage() {
         <p className="text-base-content/60">ไม่พบงานที่ตรงกับเงื่อนไขที่เลือก</p>
       )}
 
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-5 gap-y-12">
+      {/* มือถือ: 3 คอลัมน์ / จอ sm ขึ้นไป: จัดตามความกว้างจอแบบเดิม */}
+      <div className="grid grid-cols-3 gap-x-2.5 gap-y-6 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] sm:gap-x-5 sm:gap-y-12">
         {shownEvents.map((event) => (
           <EventCard
             key={event.id}

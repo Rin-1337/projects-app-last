@@ -33,7 +33,7 @@ const SIZES = {
   xs: { title: "text-[11px]", padding: "p-2" }, // ใบเล็กมาก (บัตรของฉัน)
   sm: { title: "text-[26px]", padding: "p-4" }, // ใบเล็กในแถบหน้าแรก
   md: { title: "text-[44px]", padding: "p-4" }, // ใบที่เลือกในแถบหน้าแรก
-  lg: { title: "text-[52px]", padding: "p-5" }, // การ์ดงาน
+  lg: { title: "text-[18px] sm:text-[52px]", padding: "p-2.5 sm:p-5" }, // การ์ดงาน (มือถือการ์ดเล็กเพราะเรียง 3 คอลัมน์)
   xl: { title: "text-[56px] sm:text-[96px]", padding: "p-8" }, // หน้ารายละเอียดงาน
 };
 

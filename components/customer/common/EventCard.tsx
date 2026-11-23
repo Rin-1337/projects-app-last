@@ -22,23 +22,24 @@ export function EventCard({ event, ticketTypes }: { event: EventItem; ticketType
   }
 
   return (
-    <Link href={`/customer/events/${event.id}`} className="group flex flex-col gap-3.5">
+    // มือถือการ์ดเรียง 3 คอลัมน์ (การ์ดเล็ก) จึงใช้ตัวหนังสือเล็กลง — จอ sm ขึ้นไปใช้ขนาดเดิม
+    <Link href={`/customer/events/${event.id}`} className="group flex flex-col gap-2 sm:gap-3.5">
       <div className="relative aspect-square overflow-hidden rounded-md">
         <div className="h-full w-full transition-transform duration-300 group-hover:scale-[1.03]">
           <Flyer event={event} size="lg" />
         </div>
         {isSoldOut && (
-          <span className="absolute top-3.5 right-3.5 rounded-full bg-white px-3 py-1.5 text-[13px] font-medium text-[#B42318]">
+          <span className="absolute top-1.5 right-1.5 rounded-full bg-white px-2 py-1 text-[10px] font-medium text-[#B42318] sm:top-3.5 sm:right-3.5 sm:px-3 sm:py-1.5 sm:text-[13px]">
             บัตรหมด
           </span>
         )}
       </div>
 
       <div className="flex flex-col gap-0.5">
-        <span className="text-[17px] font-medium">{event.title}</span>
-        <span className="text-sm text-base-content/60">{formatEventDate(event.startAt)}</span>
-        <span className="text-sm text-base-content/60">{event.location}</span>
-        <span className="mt-1.5 text-sm">{priceLabel}</span>
+        <span className="text-[13px] font-medium sm:text-[17px]">{event.title}</span>
+        <span className="text-[11px] text-base-content/60 sm:text-sm">{formatEventDate(event.startAt)}</span>
+        <span className="text-[11px] text-base-content/60 sm:text-sm">{event.location}</span>
+        <span className="mt-1 text-[11px] sm:mt-1.5 sm:text-sm">{priceLabel}</span>
       </div>
     </Link>
   );

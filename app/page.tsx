@@ -38,7 +38,7 @@ function HomeContent() {
 
   return (
     <>
-      <h1 className="px-5 text-right text-[72px] leading-none font-normal tracking-[-0.055em] sm:px-10 sm:text-[120px] lg:text-[168px]">
+      <h1 className="px-5 text-right text-[56px] leading-none font-normal tracking-[-0.055em] sm:px-10 sm:text-[120px] lg:text-[168px]">
         {getCategoryWord(current.category)}.
       </h1>
 
@@ -90,7 +90,8 @@ function HomeContent() {
             ดูทั้งหมด →
           </Link>
         </div>
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-x-5 gap-y-10">
+        {/* มือถือ: 3 คอลัมน์ / จอ sm ขึ้นไป: จัดตามความกว้างจอแบบเดิม */}
+        <div className="grid grid-cols-3 gap-x-2.5 gap-y-6 sm:grid-cols-[repeat(auto-fill,minmax(240px,1fr))] sm:gap-x-5 sm:gap-y-10">
           {publishedEvents.map((event) => (
             <EventCard
               key={event.id}
