@@ -69,6 +69,12 @@ export default function CustomerShopPage() {
     cartEventTitle = cartEvent.title;
   }
 
+  // จำนวนชิ้นทั้งหมดในตะกร้า (โชว์บนปุ่ม "ดูตะกร้า" ของมือถือ)
+  let cartCount = 0;
+  for (const item of cart.items) {
+    cartCount += item.quantity;
+  }
+
   function handleAdd(productId: string, productName: string, size: string, quantity: number) {
     // ตะกร้ามีของจากงานอื่นอยู่ → ถามก่อนว่าจะล้างตะกร้าไหม
     const isOtherEvent = cart.items.length > 0 && cart.eventId !== currentEventId;
@@ -128,13 +134,21 @@ export default function CustomerShopPage() {
           </div>
 
           {/* ───── ตะกร้า (ขวา 1 ส่วน, บนมือถือจะอยู่ใต้รายการสินค้า) ───── */}
-          <div className="max-w-100 min-w-0 flex-[1_1_320px] space-y-2 lg:sticky lg:top-4">
+          {/* id="cart" ให้ปุ่ม "ดูตะกร้า" ของมือถือเลื่อนลงมาที่นี่ */}
+          <div id="cart" className="max-w-100 min-w-0 flex-[1_1_320px] scroll-mt-4 space-y-2 lg:sticky lg:top-4">
             {cart.items.length > 0 && cart.eventId !== currentEventId && (
               <p className="text-xs text-warning">ตะกร้านี้เป็นของงาน &quot;{cartEventTitle}&quot;</p>
             )}
             <CartPanel rows={cartRows} onChangeQuantity={changeQuantity} onRemove={removeItem} />
           </div>
         </div>
+      )}
+
+      {/* ───── ปุ่มลอย "ดูตะกร้า" เฉพาะมือถือ (lg:hidden) เพราะตะกร้าไปอยู่ล่างสุดของหน้า ───── */}
+      {cartCount > 0 && (
+        <a href="#cart" className="btn btn-neutral fixed right-5 bottom-5 z-40 h-12 rounded-full px-5 font-normal shadow-lg lg:hidden">
+          ดูตะกร้า ({cartCount})
+        </a>
       )}
     </div>
   );

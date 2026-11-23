@@ -176,9 +176,10 @@ export function BuyTicketForm({
 
           {/* 4. ยอดรวม + ปุ่มยืนยัน */}
           <div className="flex flex-col gap-3.5 border-t border-base-300 pt-6">
-            <div className="flex items-baseline justify-between">
+            {/* flex-wrap: จอแคบให้ยอดเงินตกลงบรรทัดใหม่ได้ ไม่ล้นจอ */}
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3">
               <span className="text-[15px] text-base-content/60">ยอดรวม · {quantity} ใบ</span>
-              <span className="text-[44px] font-medium tracking-[-0.03em]">{total.toLocaleString()} บาท</span>
+              <span className="text-[32px] font-medium sm:text-[44px] tracking-[-0.03em]">{total.toLocaleString()} บาท</span>
             </div>
 
             {error && <p className="text-sm text-error">{error}</p>}

@@ -1,7 +1,7 @@
 "use client";
 
 import { QRCodeSVG } from "qrcode.react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatEventDate } from "@/components/customer/common/formatEventDate";
 import { QRDisplay } from "@/components/shared/QRDisplay";
 import { Button, Modal } from "@/components/ui";
@@ -49,6 +49,16 @@ export default function CustomerWalletPage() {
   const [successMessage, setSuccessMessage] = useState("");
   // จำนวนที่กำลังจะเติม ถ้าเป็น 0 แปลว่ายังไม่ได้เปิดหน้าต่าง QR
   const [topupAmount, setTopupAmount] = useState(0);
+
+  // ข้อความสำเร็จเด้งขึ้นมาแล้วหายเองหลัง 3 วินาที
+  useEffect(() => {
+    if (successMessage === "") {
+      return;
+    }
+    const timer = setTimeout(() => setSuccessMessage(""), 3000);
+    // ถ้าเติมซ้ำก่อนครบ 3 วินาที ให้ยกเลิกตัวจับเวลาเก่า แล้วนับใหม่
+    return () => clearTimeout(timer);
+  }, [successMessage]);
 
   // RoleGuard ใน layout เช็กแล้วว่าล็อกอินอยู่ บรรทัดนี้มีไว้ให้ TypeScript รู้ว่า user ไม่ว่าง
   if (!user) {
@@ -150,7 +160,7 @@ export default function CustomerWalletPage() {
         <div className="mb-14 flex flex-wrap items-end justify-between gap-8">
           <div>
             <h1 className="mb-2 text-[15px] font-normal text-base-content/60">ยอด Token คงเหลือ</h1>
-            <p className="text-[96px] leading-[0.9] font-normal tracking-[-0.06em] sm:text-[168px]">
+            <p className="text-[72px] leading-[0.9] font-normal tracking-[-0.06em] sm:text-[168px]">
               {balance.toLocaleString()}
             </p>
             <p className="mt-3 text-[15px] text-base-content/60">Token · 1 Token = 1 บาท</p>
@@ -229,7 +239,6 @@ export default function CustomerWalletPage() {
           </form>
 
           {errorMessage && <p className="text-sm text-error">{errorMessage}</p>}
-          {successMessage && <p className="text-sm text-success">{successMessage}</p>}
 
           <p className="text-[13px] text-base-content/60">
             เติมที่หน้างานได้ด้วย โดยแจ้ง Customer ID กับเจ้าหน้าที่ (เงินสดหรือ QR)
@@ -280,6 +289,26 @@ export default function CustomerWalletPage() {
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* ───── กล่องเด้ง "เติมสำเร็จ" กลางจอ (หายเองใน 3 วินาที หรือกดที่ไหนก็ได้เพื่อปิด) ───── */}
+      {successMessage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-5"
+          onClick={() => setSuccessMessage("")}
+        >
+          {/* พื้นขาวตายตัว เพราะหน้านี้เป็นพื้นดำ (theme posh-dark) */}
+          <div role="status" className="flex w-full max-w-xs flex-col items-center gap-4 rounded-3xl bg-white p-8 text-center text-slate-900 shadow-xl">
+            {/* วงกลมสีเขียว + เครื่องหมายติ๊กถูก */}
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500">
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-9 w-9" fill="none" stroke="white" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12l5 5l10 -10" />
+              </svg>
+            </div>
+            <p className="text-xl font-medium">เติมเงินสำเร็จ</p>
+            <p className="text-[15px] text-slate-500">{successMessage}</p>
+          </div>
+        </div>
       )}
     </>
   );
